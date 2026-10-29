@@ -1,5 +1,11 @@
 package eu.kanade.tachiyomi.extension.en.batcave
 
+import android.annotation.SuppressLint
+import android.app.Application
+import android.os.Handler
+import android.os.Looper
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.source.model.FilterList
@@ -17,13 +23,20 @@ import okhttp3.FormBody
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * batcave.biz is a DataLife Engine comics site behind Cloudflare. The host app's default client
@@ -46,6 +59,7 @@ class BatCave : HttpSource() {
         const val DATA_ASSIGNMENT = "window.__DATA__ ="
         const val SITE_HOST = "batcave.biz"
         const val STUB_LIMIT = 1500
+        const val WEBVIEW_TIMEOUT_SECONDS = 30L
     }
 
     private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.ENGLISH)
@@ -67,14 +81,70 @@ class BatCave : HttpSource() {
             response.close()
             chain.proceed(GET("$baseUrl/", headers)).close()
             val retried = chain.proceed(request)
-            if (retried.looksLikeMissingSession()) {
-                // The site's browser check can only be passed in a real browser, so ask for that.
-                retried.close()
-                throw IOException("BatCave needs a browser check: open it in WebView, wait for the page, then retry")
-            }
-            retried
+            if (!retried.looksLikeMissingSession()) return@addInterceptor retried
+            retried.close()
+            // The site's guard only lets a real browser through, so let the device's own WebView
+            // load the page and hand back what it rendered.
+            val html = loadInWebView(request.webViewUrl())
+                ?: throw IOException("BatCave needs a browser check: open it in WebView, wait for the page, then retry")
+            Response.Builder()
+                .request(request)
+                .protocol(Protocol.HTTP_1_1)
+                .code(200)
+                .message("OK")
+                .body(html.toResponseBody("text/html; charset=utf-8".toMediaType()))
+                .build()
         }
         .build()
+
+    /** The search box POSTs and is redirected to `/search/<query>`, which a WebView can simply open. */
+    private fun Request.webViewUrl(): String {
+        if (method != "POST") return url.toString()
+        val story = (body as? FormBody)?.let { form ->
+            (0 until form.size).firstOrNull { form.name(it) == "story" }?.let { form.value(it) }
+        } ?: return url.toString()
+        return "$baseUrl/search/".toHttpUrl().newBuilder().addPathSegment(story).build().toString()
+    }
+
+    /** Opens [url] in a real WebView and returns its HTML once the page is past the guard, or null on timeout. */
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun loadInWebView(url: String): String? {
+        val done = CountDownLatch(1)
+        var result: String? = null
+        val main = Handler(Looper.getMainLooper())
+        var webView: WebView? = null
+
+        fun poll() {
+            val view = webView ?: return
+            view.evaluateJavascript("document.documentElement.outerHTML") { raw ->
+                val html = runCatching { json.decodeFromString<String>(raw) }.getOrNull()
+                if (html != null && html.length >= STUB_LIMIT) {
+                    result = html
+                    done.countDown()
+                } else {
+                    main.postDelayed({ poll() }, 500)
+                }
+            }
+        }
+
+        main.post {
+            val view = WebView(Injekt.get<Application>())
+            webView = view
+            view.settings.javaScriptEnabled = true
+            view.settings.domStorageEnabled = true
+            view.webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) = poll()
+            }
+            view.loadUrl(url)
+        }
+        done.await(WEBVIEW_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        main.post {
+            webView?.stopLoading()
+            webView?.destroy()
+            webView = null
+        }
+        return result
+    }
 
     private fun Response.looksLikeMissingSession(): Boolean {
         if (code == 404) return true
