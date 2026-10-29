@@ -17,7 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.text.style.TextOverflow
+import eu.kanade.domain.source.interactor.SourceHealth
 import eu.kanade.presentation.browse.components.BaseSourceItem
+import tachiyomi.presentation.core.util.secondaryItemAlpha
 import eu.kanade.tachiyomi.ui.browse.source.SourcesViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceViewModel.Listing
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -81,6 +87,8 @@ fun SourcesScreen(
                         is SourceUiModel.Item -> SourceItem(
                             modifier = Modifier.animateItem(),
                             source = model.source,
+                            health = state.health[model.source.id],
+                            isChecking = model.source.id in state.checking,
                             onClickItem = onClickItem,
                             onLongClickItem = onLongClickItem,
                             onClickPin = onClickPin,
@@ -109,6 +117,8 @@ private fun SourceHeader(
 @Composable
 private fun SourceItem(
     source: Source,
+    health: SourceHealth?,
+    isChecking: Boolean,
     onClickItem: (Source, Listing) -> Unit,
     onLongClickItem: (Source) -> Unit,
     onClickPin: (Source) -> Unit,
@@ -119,6 +129,32 @@ private fun SourceItem(
         source = source,
         onClickItem = { onClickItem(source, Listing.Popular) },
         onLongClickItem = { onLongClickItem(source) },
+        content = { src, language ->
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = MaterialTheme.padding.medium)
+                    .weight(1f),
+            ) {
+                Text(
+                    text = src.name,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Row {
+                    if (language != null) {
+                        Text(
+                            modifier = Modifier.secondaryItemAlpha(),
+                            text = language,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    HealthLabel(health = health, isChecking = isChecking, hasLanguage = language != null)
+                }
+            }
+        },
         action = {
             if (source.supportsLatest) {
                 TextButton(onClick = { onClickItem(source, Listing.Latest) }) {
@@ -135,6 +171,26 @@ private fun SourceItem(
                 onClick = { onClickPin(source) },
             )
         },
+    )
+}
+
+@Composable
+private fun HealthLabel(health: SourceHealth?, isChecking: Boolean, hasLanguage: Boolean) {
+    val (text, color) = when {
+        isChecking -> MR.strings.source_health_checking to MaterialTheme.colorScheme.onSurfaceVariant
+        health == SourceHealth.Ok -> MR.strings.source_health_ok to MaterialTheme.colorScheme.primary
+        health == SourceHealth.Cloudflare -> MR.strings.source_health_cloudflare to MaterialTheme.colorScheme.error
+        health == SourceHealth.Blocked -> MR.strings.source_health_blocked to MaterialTheme.colorScheme.error
+        health == SourceHealth.Down -> MR.strings.source_health_down to MaterialTheme.colorScheme.error
+        else -> return
+    }
+    if (hasLanguage) Spacer(Modifier.width(MaterialTheme.padding.small))
+    Text(
+        text = stringResource(text),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        style = MaterialTheme.typography.bodySmall,
+        color = color,
     )
 }
 
@@ -165,6 +221,7 @@ private fun SourcePinButton(
 fun SourceOptionsDialog(
     source: Source,
     onClickPin: () -> Unit,
+    onClickCheck: () -> Unit,
     onClickDisable: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -183,6 +240,13 @@ fun SourceOptionsDialog(
                         .padding(vertical = 16.dp),
                 )
                 if (!source.isLocal()) {
+                    Text(
+                        text = stringResource(MR.strings.action_check_source),
+                        modifier = Modifier
+                            .clickable(onClick = onClickCheck)
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                    )
                     Text(
                         text = stringResource(MR.strings.action_disable),
                         modifier = Modifier

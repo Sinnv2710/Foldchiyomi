@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.rounded.TravelExplore
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -35,6 +36,11 @@ fun Screen.sourcesTab(): TabContent {
                 title = stringResource(MR.strings.action_global_search),
                 icon = MaterialSymbols.Rounded.TravelExplore,
                 onClick = { navigator.push(GlobalSearchScreen()) },
+            ),
+            AppBar.Action(
+                title = stringResource(MR.strings.action_check_sources),
+                icon = MaterialSymbols.Rounded.Sync,
+                onClick = viewModel::checkAllSources,
             ),
             AppBar.Action(
                 title = stringResource(MR.strings.action_filter),
@@ -59,6 +65,10 @@ fun Screen.sourcesTab(): TabContent {
                     source = source,
                     onClickPin = {
                         viewModel.togglePin(source)
+                        viewModel.closeDialog()
+                    },
+                    onClickCheck = {
+                        viewModel.checkSource(source)
                         viewModel.closeDialog()
                     },
                     onClickDisable = {
