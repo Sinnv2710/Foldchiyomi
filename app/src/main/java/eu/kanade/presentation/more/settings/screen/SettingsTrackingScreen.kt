@@ -128,6 +128,11 @@ object SettingsTrackingScreen : SearchableSettings {
                 preference = trackPreferences.autoUpdateTrack,
                 title = stringResource(MR.strings.pref_auto_update_manga_sync),
             ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = trackPreferences.pullTrackerProgress,
+                title = stringResource(MR.strings.pref_pull_tracker_progress),
+                subtitle = stringResource(MR.strings.pref_pull_tracker_progress_summary),
+            ),
             Preference.PreferenceItem.ListPreference(
                 preference = trackPreferences.autoUpdateTrackOnMarkRead,
                 entries = AutoTrackState.entries
