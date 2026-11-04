@@ -424,6 +424,47 @@ open class ImageViewerState(var isVertical: Boolean = false, var isReversed: Boo
                 .getOrNull()
         } ?: return false
         if (getPage(0) !== page || pageOffset != 0f || !page.atHomeScale) return false
+        return frameRect(page, rect)
+    }
+
+    /**
+     * Steps to the panel [delta] places on in reading order (1 next, -1 previous), framing it. A page
+     * at rest starts at its first panel. False past either end, or where no panel can be found, so the
+     * caller turns the page instead.
+     */
+    suspend fun stepPanel(delta: Int): Boolean {
+        if (pageOffset != 0f || bubble != null) return false
+        val page = getPage(0) as? ImagePage.ImageSingle ?: return false
+        val w = width
+        val h = height
+        if (w <= 0 || h <= 0) return false
+        val panels = withContext(Dispatchers.Default) {
+            runCatching { PanelZoom.allOnScreen(page, w, h, isReversed) }
+                .onFailure { Log.w("ImageViewerState", "Panel detection failed", it) }
+                .getOrNull()
+        }.orEmpty()
+        // A page that is one panel has nothing to step through.
+        if (panels.size < 2) return false
+        if (getPage(0) !== page || pageOffset != 0f) return false
+
+        val current = if (page.atHomeScale) {
+            -1
+        } else {
+            val cx = 0.5f
+            val cy = 0.5f
+            panels.indices.minByOrNull {
+                val p = panels[it]
+                abs((p[0] + p[2]) * 0.5f - cx) + abs((p[1] + p[3]) * 0.5f - cy)
+            } ?: return false
+        }
+        val target = if (current < 0) (if (delta > 0) 0 else return false) else current + delta
+        if (target !in panels.indices) return false
+        return frameRect(page, panels[target])
+    }
+
+    private suspend fun frameRect(page: ImagePage.ImageSingle, rect: FloatArray): Boolean {
+        val w = width
+        val h = height
 
         // Scaled to fit with a little room, about the screen's centre, then moved so the panel's
         // centre lands there: on screen a page point sits at 0.5 + scale * (page.x + k) for a k

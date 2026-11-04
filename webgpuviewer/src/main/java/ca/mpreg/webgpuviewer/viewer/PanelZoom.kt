@@ -1,6 +1,7 @@
 package ca.mpreg.webgpuviewer.viewer
 
 import ca.mpreg.webgpuviewer.renderer.InkMap
+import ca.mpreg.webgpuviewer.renderer.WebGpuRenderer
 import kotlin.math.max
 
 /**
@@ -67,6 +68,43 @@ internal object PanelZoom {
             imageRect[0] + found[2] * sx,
             imageRect[1] + found[3] * sy,
         )
+    }
+
+    /**
+     * Every panel of [page], in reading order, as screen bounds (x1, y1, x2, y2) at the page's
+     * current transform - both pages of a spread, the first in reading direction first. Empty where
+     * an image has no ink map yet. Off the GPU thread, like [detect].
+     */
+    fun allOnScreen(
+        page: ImagePage.ImageSingle,
+        screenWidth: Int,
+        screenHeight: Int,
+        rightToLeft: Boolean,
+    ): List<FloatArray> {
+        class Placed(val rect: FloatArray, val panels: List<IntArray>, val map: InkMap)
+        val images = ArrayList<Placed>()
+        page.forEachImage { image, offsetX, imageScale ->
+            val map = image.inkMap ?: return@forEachImage
+            val placeX = (page.x + offsetX / screenWidth + WebGpuRenderer.offsetX) / imageScale -
+                WebGpuRenderer.offsetX
+            val placeY = (page.y + WebGpuRenderer.offsetY) / imageScale - WebGpuRenderer.offsetY
+            val rect = image.placement(screenWidth, screenHeight, placeX, placeY, page.scale * imageScale)
+            images += Placed(rect, panelOrder(map, rightToLeft), map)
+        }
+        images.sortBy { it.rect[0] }
+        if (rightToLeft) images.reverse()
+        return images.flatMap { placed ->
+            val sx = (placed.rect[2] - placed.rect[0]) / placed.map.width
+            val sy = (placed.rect[3] - placed.rect[1]) / placed.map.height
+            placed.panels.map {
+                floatArrayOf(
+                    placed.rect[0] + it[0] * sx,
+                    placed.rect[1] + it[1] * sy,
+                    placed.rect[0] + it[2] * sx,
+                    placed.rect[1] + it[3] * sy,
+                )
+            }
+        }
     }
 
     /** The gutters of [map]: paper reachable from the page's edges, one flag per map pixel. */

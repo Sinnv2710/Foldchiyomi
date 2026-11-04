@@ -227,6 +227,9 @@ class ReaderPreferences(
     /** Double-tap a speech bubble to open it enlarged over the page. */
     val bubbleZoom: Preference<Boolean> = preferenceStore.getBoolean("webgpu_bubble_zoom", true)
 
+    /** Taps and keys step panel by panel, turning the page only past the last one. */
+    val guidedReading: Preference<Boolean> = preferenceStore.getBoolean("webgpu_guided_reading", false)
+
     /** The bubble gesture on artwork zooms to the panel under it rather than in by a step. */
     val panelZoom: Preference<Boolean> = preferenceStore.getBoolean("webgpu_panel_zoom", false)
 
