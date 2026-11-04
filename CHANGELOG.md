@@ -5,6 +5,8 @@ All notable changes to Foldchiyomi are documented here. For the changes it inher
 ## [v1.8.2] - Unreleased
 
 ### Added
+- **Sources that stopped working are easy to turn off.** After **Check sources** in the Sources tab, a message says how many answered and offers **Turn them off** for the ones that did not (unreachable or blocked; a Cloudflare check is not counted as broken). They stay installed and come back from the sources filter.
+- **Add the Keiyoushi repo in one tap** from an empty **Extension repos** screen. It still asks to confirm first. Extension updates are checked every time the app opens, so a repo like Keiyoushi brings the fixes for sources whose sites changed.
 - **Auto scroll** for the webtoon and continuous reading modes, an idea from Komikku and TachiyomiSY. Press play in the reader's bottom bar and the page scrolls by itself at a steady speed, the same at any refresh rate. A touch on the page stops it, and so does the end of the chapter. Set the speed under the reader's settings (**Auto scroll speed**).
 
 ### Fixed
