@@ -140,7 +140,15 @@ class SourcesViewModel(
                 if (index > 0) delay(CHECK_GAP_MS)
                 runCheck(source)
             }
+            // Cloudflare is not "broken": the source works once the check is passed in the WebView.
+            val broken = sources.filter { health.value[it.id] in BROKEN }
+            _events.send(Event.CheckFinished(total = sources.size, broken = broken))
         }
+    }
+
+    /** Turns the given sources off. They stay installed and come back from the sources filter. */
+    fun disableSources(sources: List<Source>) {
+        sources.forEach { toggleSource.await(it) }
     }
 
     private suspend fun runCheck(source: Source) {
@@ -152,6 +160,7 @@ class SourcesViewModel(
 
     sealed interface Event {
         data object FailedFetchingSources : Event
+        data class CheckFinished(val total: Int, val broken: List<Source>) : Event
     }
 
     data class Dialog(val source: Source)
@@ -171,5 +180,6 @@ class SourcesViewModel(
         const val PINNED_KEY = "pinned"
         const val LAST_USED_KEY = "last_used"
         private const val CHECK_GAP_MS = 500L
+        private val BROKEN = setOf(SourceHealth.Blocked, SourceHealth.Down)
     }
 }

@@ -13,6 +13,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoreScreenState
 import mihon.domain.extension.model.ExtensionStore
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Add
 import mihon.icons.materialsymbols.rounded.Refresh
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -20,6 +21,7 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -31,6 +33,7 @@ fun ExtensionStoresScreen(
     onOpenDiscord: (ExtensionStore) -> Unit,
     onClickDelete: (ExtensionStore) -> Unit,
     onClickRefresh: () -> Unit,
+    onClickSuggested: (indexUrl: String) -> Unit,
     navigateUp: () -> Unit,
 ) {
     val lazyListState = rememberLazyListState()
@@ -61,6 +64,14 @@ fun ExtensionStoresScreen(
             EmptyScreen(
                 MR.strings.extensionStoresScreen_emptyLabel,
                 modifier = Modifier.padding(paddingValues),
+                actions = listOf(
+                    EmptyScreenAction(
+                        stringRes = MR.strings.action_add_suggested_repo,
+                        icon = MaterialSymbols.Rounded.Add,
+                        // The confirm dialog still asks first: nothing is added until it is accepted.
+                        onClick = { onClickSuggested(SUGGESTED_REPO_INDEX_URL) },
+                    ),
+                ),
             )
             return@Scaffold
         }
@@ -77,3 +88,9 @@ fun ExtensionStoresScreen(
         )
     }
 }
+
+/**
+ * Keiyoushi, the community repository most Mihon users install their sources from; it carries
+ * updates for sources that stop working when a site changes.
+ */
+private const val SUGGESTED_REPO_INDEX_URL = "https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json"
