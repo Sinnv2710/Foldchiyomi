@@ -131,7 +131,13 @@ class LibraryViewModel(
     // first query result, and so returning to the tab doesn't flash empty while it restarts.
     private val library = combine(
         searchQuery.debounce(0.25.seconds),
-        getCategories.subscribe(),
+        combine(
+            getCategories.subscribe(),
+            libraryPreferences.hiddenCategories.changes(),
+            libraryPreferences.showHiddenCategories.changes(),
+        ) { categories, hidden, showHidden ->
+            if (showHidden) categories else categories.filterNot { it.id.toString() in hidden }
+        },
         getFavoritesFlow(),
         combine(getTracksPerManga.subscribe(), getTrackingFiltersFlow(), ::Pair),
         getLibraryItemPreferencesFlow(),

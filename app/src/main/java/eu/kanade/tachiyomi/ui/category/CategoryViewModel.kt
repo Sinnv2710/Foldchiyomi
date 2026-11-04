@@ -25,6 +25,7 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.RenameCategory
 import tachiyomi.domain.category.interactor.ReorderCategory
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import kotlin.time.Duration.Companion.seconds
 
@@ -37,6 +38,7 @@ class CategoryViewModel(
     private val deleteCategory: DeleteCategory,
     private val reorderCategory: ReorderCategory,
     private val renameCategory: RenameCategory,
+    private val libraryPreferences: LibraryPreferences,
 ) : ViewModel() {
 
     private val _events: Channel<CategoryEvent> = Channel()
@@ -47,13 +49,27 @@ class CategoryViewModel(
     val state: StateFlow<CategoryScreenState> = combine(
         getCategories.subscribe(),
         dialog,
-    ) { categories, dialog ->
+        libraryPreferences.hiddenCategories.changes(),
+        libraryPreferences.showHiddenCategories.changes(),
+    ) { categories, dialog, hidden, showHidden ->
         CategoryScreenState.Success(
             categories = categories.filterNot(Category::isSystemCategory),
             dialog = dialog,
+            hiddenIds = hidden.mapNotNullTo(mutableSetOf()) { it.toLongOrNull() },
+            showHidden = showHidden,
         )
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), CategoryScreenState.Loading)
+
+    fun toggleHidden(category: Category) {
+        val id = category.id.toString()
+        val hidden = libraryPreferences.hiddenCategories
+        hidden.set(hidden.get().let { if (id in it) it - id else it + id })
+    }
+
+    fun toggleShowHidden() {
+        libraryPreferences.showHiddenCategories.let { it.set(!it.get()) }
+    }
 
     fun createCategory(name: String) {
         viewModelScope.launch {
@@ -120,6 +136,8 @@ sealed interface CategoryScreenState {
     data class Success(
         val categories: List<Category>,
         val dialog: CategoryDialog? = null,
+        val hiddenIds: Set<Long> = emptySet(),
+        val showHidden: Boolean = false,
     ) : CategoryScreenState {
 
         val isEmpty: Boolean
