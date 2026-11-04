@@ -29,6 +29,9 @@ fun ReaderBottomBar(
     modifier: Modifier = Modifier,
     /** Null where there is no spread to shift - a single page, or a webtoon. */
     onClickShiftSpread: (() -> Unit)? = null,
+    autoScrolling: Boolean = false,
+    /** Null where the viewer cannot scroll by itself - only the continuous ones can. */
+    onClickAutoScroll: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -55,6 +58,17 @@ fun ReaderBottomBar(
                 painter = painterResource(if (cropEnabled) R.drawable.ic_crop_24dp else R.drawable.ic_crop_off_24dp),
                 contentDescription = stringResource(MR.strings.pref_crop_borders),
             )
+        }
+
+        if (onClickAutoScroll != null) {
+            IconButton(onClick = onClickAutoScroll) {
+                Icon(
+                    painter = painterResource(
+                        if (autoScrolling) R.drawable.ic_pause_24dp else R.drawable.ic_play_arrow_24dp,
+                    ),
+                    contentDescription = stringResource(MR.strings.action_auto_scroll),
+                )
+            }
         }
 
         if (onClickShiftSpread != null) {

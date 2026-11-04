@@ -4,6 +4,9 @@ All notable changes to Foldchiyomi are documented here. For the changes it inher
 
 ## [v1.8.2] - Unreleased
 
+### Added
+- **Auto scroll** for the webtoon and continuous reading modes, an idea from Komikku and TachiyomiSY. Press play in the reader's bottom bar and the page scrolls by itself at a steady speed, the same at any refresh rate. A touch on the page stops it, and so does the end of the chapter. Set the speed under the reader's settings (**Auto scroll speed**).
+
 ### Fixed
 - **The cover on the cover screen crashed the reader** when the phone took the outer screen back and offered it again, as around the notification shade or an app switch: the new window sometimes came before its display. It is now tried again a moment later instead.
 

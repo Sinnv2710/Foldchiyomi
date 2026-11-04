@@ -806,6 +806,10 @@ class ReaderViewModel(
         ) + filenameSuffix
     }
 
+    fun setAutoScrolling(scrolling: Boolean) {
+        mutableState.update { it.copy(autoScrolling = scrolling) }
+    }
+
     fun showMenus(visible: Boolean) {
         mutableState.update { it.copy(menuVisible = visible) }
     }
@@ -1020,6 +1024,7 @@ class ReaderViewModel(
         val viewer: Viewer? = null,
         val dialog: Dialog? = null,
         val menuVisible: Boolean = false,
+        val autoScrolling: Boolean = false,
         @IntRange(from = -100, to = 100) val brightnessOverlayValue: Int = 0,
     ) {
         val currentChapter: ReaderChapter?
