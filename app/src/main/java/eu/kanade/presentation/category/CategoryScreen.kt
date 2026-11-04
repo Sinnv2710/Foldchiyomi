@@ -17,6 +17,11 @@ import androidx.compose.ui.Modifier
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
 import eu.kanade.presentation.category.components.CategoryListItem
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarActions
+import kotlinx.collections.immutable.persistentListOf
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Visibility
+import mihon.icons.materialsymbols.rounded.VisibilityOff
 import eu.kanade.tachiyomi.ui.category.CategoryScreenState
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -36,6 +41,8 @@ fun CategoryScreen(
     onClickRename: (Category) -> Unit,
     onClickDelete: (Category) -> Unit,
     onChangeOrder: (Category, Int) -> Unit,
+    onToggleHidden: (Category) -> Unit,
+    onToggleShowHidden: () -> Unit,
     navigateUp: () -> Unit,
 ) {
     val lazyListState = rememberLazyListState()
@@ -44,6 +51,19 @@ fun CategoryScreen(
             AppBar(
                 title = stringResource(MR.strings.action_edit_categories),
                 navigateUp = navigateUp,
+                actions = {
+                    AppBarActions(
+                        persistentListOf(
+                            AppBar.Action(
+                                title = stringResource(
+                                    if (state.showHidden) MR.strings.action_hide_hidden_categories else MR.strings.action_show_hidden_categories,
+                                ),
+                                icon = if (state.showHidden) MaterialSymbols.Rounded.VisibilityOff else MaterialSymbols.Rounded.Visibility,
+                                onClick = onToggleShowHidden,
+                            ),
+                        ),
+                    )
+                },
                 scrollBehavior = scrollBehavior,
             )
         },
@@ -69,6 +89,8 @@ fun CategoryScreen(
             onClickRename = onClickRename,
             onClickDelete = onClickDelete,
             onChangeOrder = onChangeOrder,
+            hiddenIds = state.hiddenIds,
+            onToggleHidden = onToggleHidden,
         )
     }
 }
@@ -81,6 +103,8 @@ private fun CategoryContent(
     onClickRename: (Category) -> Unit,
     onClickDelete: (Category) -> Unit,
     onChangeOrder: (Category, Int) -> Unit,
+    hiddenIds: Set<Long>,
+    onToggleHidden: (Category) -> Unit,
 ) {
     val categoriesState = remember { categories.toMutableStateList() }
     val reorderableState = rememberReorderableLazyListState(lazyListState, paddingValues) { from, to ->
@@ -114,6 +138,8 @@ private fun CategoryContent(
                     category = category,
                     onRename = { onClickRename(category) },
                     onDelete = { onClickDelete(category) },
+                    hidden = category.id in hiddenIds,
+                    onToggleHidden = { onToggleHidden(category) },
                 )
             }
         }

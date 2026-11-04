@@ -500,6 +500,10 @@
     <string name="pref_bubble_zoom_gesture">Bubble zoom gesture</string>
     <string name="pref_panel_zoom">Zoom to panel</string>
     <string name="pref_panel_zoom_summary">The bubble gesture on artwork zooms to the panel under it. Where no panel is found, it zooms in as usual</string>
+    <string name="action_hide_category">Hide from the library</string>
+    <string name="action_unhide_category">Show in the library</string>
+    <string name="action_show_hidden_categories">Show hidden categories</string>
+    <string name="action_hide_hidden_categories">Hide hidden categories again</string>
     <string name="action_add_suggested_repo">Add the Keiyoushi repo</string>
     <string name="action_auto_scroll">Auto scroll</string>
     <string name="pref_auto_scroll_speed">Auto scroll speed</string>

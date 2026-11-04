@@ -131,6 +131,13 @@ class LibraryPreferences(
 
     val lastUsedCategory: Preference<Int> = preferenceStore.getInt(Preference.appStateKey("last_used_category"), 0)
 
+    /** Ids of categories kept out of the library, as strings. */
+    val hiddenCategories: Preference<Set<String>> = preferenceStore.getStringSet("hidden_categories", emptySet())
+
+    /** Whether hidden categories show anyway. Not backed up; the app turns it off again at every start. */
+    val showHiddenCategories: Preference<Boolean> =
+        preferenceStore.getBoolean(Preference.appStateKey("show_hidden_categories"), false)
+
     val categoryTabs: Preference<Boolean> = preferenceStore.getBoolean("display_category_tabs", true)
 
     val categoryNumberOfItems: Preference<Boolean> = preferenceStore.getBoolean("display_number_of_items", false)
