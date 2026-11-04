@@ -1,5 +1,6 @@
 package eu.kanade.presentation.updates
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,8 @@ import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ExpandLess
+import mihon.icons.materialsymbols.rounded.ExpandMore
 import mihon.icons.materialsymbols.roundedfilled.Bookmark
 import mihon.icons.materialsymbols.roundedfilled.Circle
 import tachiyomi.domain.updates.model.UpdatesWithRelations
@@ -72,6 +75,7 @@ internal fun LazyListScope.updatesUiItems(
     onClickCover: (UpdatesItem) -> Unit,
     onClickUpdate: (UpdatesItem) -> Unit,
     onDownloadChapter: (List<UpdatesItem>, ChapterDownloadAction) -> Unit,
+    onToggleGroup: (String) -> Unit,
 ) {
     items(
         items = uiModels,
@@ -79,10 +83,12 @@ internal fun LazyListScope.updatesUiItems(
             when (it) {
                 is UpdatesUiModel.Header -> "header"
                 is UpdatesUiModel.Item -> "item"
+                is UpdatesUiModel.Group -> "group"
             }
         },
         key = {
             when (it) {
+                is UpdatesUiModel.Group -> "updatesGroup-${it.key}"
                 is UpdatesUiModel.Header -> "updatesHeader-${it.hashCode()}"
                 is UpdatesUiModel.Item -> "updates-${it.item.update.mangaId}-${it.item.update.chapterId}"
             }
@@ -93,6 +99,14 @@ internal fun LazyListScope.updatesUiItems(
                 ListGroupHeader(
                     modifier = Modifier.animateItem(),
                     text = relativeDateText(item.date),
+                )
+            }
+            is UpdatesUiModel.Group -> {
+                UpdatesGroupRow(
+                    modifier = Modifier.animateItem(),
+                    group = item,
+                    onClick = { onToggleGroup(item.key) },
+                    onClickCover = { onClickCover(item.items.first()) },
                 )
             }
             is UpdatesUiModel.Item -> {
@@ -232,6 +246,58 @@ private fun UpdatesUiItem(
             downloadStateProvider = downloadStateProvider,
             downloadProgressProvider = downloadProgressProvider,
             onClick = { onDownloadChapter?.invoke(it) },
+        )
+    }
+}
+
+@Composable
+private fun UpdatesGroupRow(
+    group: UpdatesUiModel.Group,
+    onClick: () -> Unit,
+    onClickCover: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val first = group.items.first().update
+    val unread = group.items.count { !it.update.read }
+    Row(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .height(56.dp)
+            .padding(horizontal = MaterialTheme.padding.medium),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        MangaCover.Square(
+            modifier = Modifier
+                .padding(vertical = 6.dp)
+                .fillMaxHeight(),
+            data = first.coverData,
+            onClick = onClickCover,
+        )
+        Column(
+            modifier = Modifier
+                .padding(horizontal = MaterialTheme.padding.medium)
+                .weight(1f),
+        ) {
+            Text(
+                text = first.mangaTitle,
+                maxLines = 1,
+                style = MaterialTheme.typography.bodyMedium,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = if (unread > 0) {
+                    stringResource(MR.strings.updates_group_new_chapters, group.items.size, unread)
+                } else {
+                    stringResource(MR.strings.updates_group_chapters, group.items.size)
+                },
+                maxLines = 1,
+                style = MaterialTheme.typography.bodySmall,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Icon(
+            imageVector = if (group.expanded) MaterialSymbols.Rounded.ExpandLess else MaterialSymbols.Rounded.ExpandMore,
+            contentDescription = null,
         )
     }
 }

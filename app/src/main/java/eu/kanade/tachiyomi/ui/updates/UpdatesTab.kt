@@ -77,6 +77,7 @@ data object UpdatesTab : Tab {
             },
             onCalendarClicked = { navigator.push(UpcomingScreen()) },
             onFilterClicked = viewModel::showFilterDialog,
+            onToggleGroup = viewModel::toggleGroup,
             hasActiveFilters = state.hasActiveFilters,
         )
 
