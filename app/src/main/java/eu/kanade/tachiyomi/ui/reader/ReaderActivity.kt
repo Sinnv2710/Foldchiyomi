@@ -531,6 +531,15 @@ class ReaderActivity : BaseActivity() {
                 menuToggleToast = toast(if (enabled) MR.strings.on else MR.strings.off)
             },
             onClickSettings = viewModel::openSettingsDialog,
+            autoScrolling = state.autoScrolling,
+            onClickAutoScroll = state.viewer?.takeIf { it.supportsAutoScroll }?.let { viewer ->
+                {
+                    val scrolling = viewer.toggleAutoScroll()
+                    viewModel.setAutoScrolling(scrolling)
+                    // Out of the way of the page it is about to scroll.
+                    if (scrolling) hideMenu()
+                }
+            },
             onClickShiftSpread = (state.viewer as? WebGpuViewer)?.takeIf { it.isDualPageMode() }?.let { viewer ->
                 {
                     val shifted = viewer.toggleSpreadShift()
@@ -539,6 +548,27 @@ class ReaderActivity : BaseActivity() {
                 }
             },
         )
+    }
+
+    /**
+     * Called by a viewer that stopped scrolling by itself: it reached the end, or was told to stop.
+     */
+    fun onAutoScrollStopped() {
+        viewModel.setAutoScrolling(false)
+    }
+
+    /**
+     * Any touch on the page takes the reading back from the auto scroll.
+     */
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
+            val viewer = viewModel.state.value.viewer
+            if (viewer?.isAutoScrolling == true) {
+                viewer.stopAutoScroll()
+                return true
+            }
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     /**

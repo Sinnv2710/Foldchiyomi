@@ -210,6 +210,8 @@ private fun ColumnScope.WebtoonViewerSettings(viewModel: ReaderSettingsViewModel
         onSelectInvertMode = viewModel.preferences.webtoonNavInverted::set,
     )
 
+    AutoScrollSpeedItem(viewModel)
+
     val webtoonSidePadding by viewModel.preferences.webtoonSidePadding.collectAsState()
     SliderItem(
         value = webtoonSidePadding,
@@ -260,6 +262,22 @@ private fun ColumnScope.WebtoonViewerSettings(viewModel: ReaderSettingsViewModel
     CheckboxItem(
         label = stringResource(MR.strings.pref_webtoon_disable_zoom_out),
         pref = viewModel.preferences.webtoonDisableZoomOut,
+    )
+}
+
+@Composable
+private fun ColumnScope.AutoScrollSpeedItem(viewModel: ReaderSettingsViewModel) {
+    val speed by viewModel.preferences.autoScrollSpeed.collectAsState()
+    SliderItem(
+        value = speed,
+        valueRange = ReaderPreferences.let { it.AUTO_SCROLL_SPEED_MIN..it.AUTO_SCROLL_SPEED_MAX },
+        label = stringResource(MR.strings.pref_auto_scroll_speed),
+        valueString = stringResource(
+            MR.strings.auto_scroll_speed_value,
+            speed * ReaderPreferences.AUTO_SCROLL_SPEED_UNIT_DP,
+        ),
+        onChange = { viewModel.preferences.autoScrollSpeed.set(it) },
+        pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
     )
 }
 
@@ -324,6 +342,8 @@ private fun ColumnScope.WebGpuViewerSettings(viewModel: ReaderSettingsViewModel)
         invertMode = navInverted,
         onSelectInvertMode = navInvertedPref::set,
     )
+
+    if (continuous) AutoScrollSpeedItem(viewModel)
 
     CheckboxItem(
         label = stringResource(MR.strings.pref_double_tap_zoom),

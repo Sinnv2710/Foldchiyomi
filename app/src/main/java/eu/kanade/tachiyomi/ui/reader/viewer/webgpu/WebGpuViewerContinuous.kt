@@ -4,6 +4,8 @@ import ca.mpreg.webgpuviewer.ImageViewContinuous
 import ca.mpreg.webgpuviewer.viewer.ImagePage
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
+import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
+import eu.kanade.tachiyomi.ui.reader.viewer.AutoScroller
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
@@ -73,7 +75,44 @@ class WebGpuViewerContinuous(activity: ReaderActivity, val useGap: Boolean = fal
         return (viewerPageFor(imagePage) as? ViewerReaderPage)?.page
     }
 
+    private val autoScroller = AutoScroller(
+        density = activity.resources.displayMetrics.density,
+        speedDpPerSecond = {
+            readerPreferences.autoScrollSpeed.get() * ReaderPreferences.AUTO_SCROLL_SPEED_UNIT_DP.toFloat()
+        },
+        step = { pixels ->
+            // scrollBy works in page space, so divide out the zoom: the speed is on screen.
+            val before = state.documentYDouble
+            state.scrollBy(pixels / state.scale.coerceAtLeast(MIN_SCALE))
+            state.invalidate()
+            state.documentYDouble != before
+        },
+        onStopped = {
+            // The viewport only reports reading progress while it believes it is flinging.
+            state.isFlinging = false
+            state.invalidate()
+            activity.onAutoScrollStopped()
+        },
+    )
+
+    override val supportsAutoScroll = true
+
+    override val isAutoScrolling get() = autoScroller.isRunning
+
+    override fun toggleAutoScroll(): Boolean {
+        if (autoScroller.isRunning) {
+            autoScroller.stop()
+        } else {
+            state.isFlinging = true
+            autoScroller.start()
+        }
+        return autoScroller.isRunning
+    }
+
+    override fun stopAutoScroll() = autoScroller.stop()
+
     override fun destroy() {
+        autoScroller.stop()
         state.onViewport = null
         lastReadThrough = null
         wasAtEdge = null
@@ -100,3 +139,5 @@ class WebGpuViewerContinuous(activity: ReaderActivity, val useGap: Boolean = fal
         state.animateSlideIn(direction)
     }
 }
+
+private const val MIN_SCALE = 0.01f

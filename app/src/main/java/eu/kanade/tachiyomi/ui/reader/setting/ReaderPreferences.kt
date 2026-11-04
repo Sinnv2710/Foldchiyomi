@@ -23,6 +23,9 @@ class ReaderPreferences(
     val pageTransitions: Preference<Boolean> = preferenceStore.getBoolean("pref_enable_transitions_key", true)
 
     /** The cover of what you're reading on the phone's cover screen while it lies open. */
+    /** Auto scroll speed, in steps of [AUTO_SCROLL_SPEED_UNIT_DP] dp per second. */
+    val autoScrollSpeed: Preference<Int> = preferenceStore.getInt("pref_auto_scroll_speed", 8)
+
     val coverScreenCover: Preference<Boolean> = preferenceStore.getBoolean("pref_cover_screen_cover", false)
 
     val flashOnPageChange: Preference<Boolean> = preferenceStore.getBoolean("pref_reader_flash", false)
@@ -320,6 +323,10 @@ class ReaderPreferences(
     }
 
     companion object {
+        const val AUTO_SCROLL_SPEED_MIN = 1
+        const val AUTO_SCROLL_SPEED_MAX = 30
+        const val AUTO_SCROLL_SPEED_UNIT_DP = 10
+
         const val WEBTOON_PADDING_MIN = 0
         const val WEBTOON_PADDING_MAX = 25
 

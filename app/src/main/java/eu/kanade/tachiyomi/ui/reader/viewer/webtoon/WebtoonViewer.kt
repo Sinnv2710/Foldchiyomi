@@ -15,6 +15,8 @@ import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.model.ChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
+import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
+import eu.kanade.tachiyomi.ui.reader.viewer.AutoScroller
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.ui.reader.viewer.ViewerNavigation.NavigationRegion
 import kotlinx.coroutines.MainScope
@@ -71,6 +73,30 @@ class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boolean = tr
     private var currentPage: Any? = null
 
     private val threshold: Int by lazy { readerPreferences.readerHideThreshold.get().threshold }
+
+    private val autoScroller = AutoScroller(
+        density = activity.resources.displayMetrics.density,
+        speedDpPerSecond = {
+            readerPreferences.autoScrollSpeed.get() * ReaderPreferences.AUTO_SCROLL_SPEED_UNIT_DP.toFloat()
+        },
+        step = { pixels ->
+            val canScroll = recycler.canScrollVertically(1)
+            if (canScroll) recycler.scrollBy(0, pixels)
+            canScroll
+        },
+        onStopped = { activity.onAutoScrollStopped() },
+    )
+
+    override val supportsAutoScroll = true
+
+    override val isAutoScrolling get() = autoScroller.isRunning
+
+    override fun toggleAutoScroll(): Boolean {
+        if (autoScroller.isRunning) autoScroller.stop() else autoScroller.start()
+        return autoScroller.isRunning
+    }
+
+    override fun stopAutoScroll() = autoScroller.stop()
 
     init {
         recycler.setItemViewCacheSize(RECYCLER_VIEW_CACHE_SIZE)
@@ -193,6 +219,7 @@ class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boolean = tr
      */
     override fun destroy() {
         super.destroy()
+        autoScroller.stop()
         scope.cancel()
     }
 
