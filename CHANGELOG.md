@@ -5,6 +5,7 @@ All notable changes to Foldchiyomi are documented here. For the changes it inher
 ## [v1.8.2] - Unreleased
 
 ### Added
+- **Merge duplicates in the library.** Select two or more entries of the same series (say, the same manga from two sources) and press the merge button in the top bar. Pick the one to keep: chapters read or bookmarked in the others are marked in it by chapter number, their categories are added to it, and the others leave the library. It only ever marks read, and nothing is deleted. Idea from Komikku, without its merged-source entries.
 - **Guided reading.** Off by default: **Reader settings → Guided reading**. Taps and volume keys go panel by panel, framing each one in reading order (both pages of a spread, right to left for manga), and turn the page after the last panel. A page with no panels found turns as usual. Not in the scrolling modes. Idea from mihon-ds.
 - **Read what the tracker says you read.** Off by default: **Settings → Tracking → Read what the tracker says you read**. When you open a series, chapters are marked read here up to the chapter its tracker (AniList, MyAnimeList and the like) reports, so reading on another device carries over. One way only: nothing is sent back, and no chapter is marked unread. Idea from Komikku and mihon-ds.
 - **Grouped updates.** In the Updates tab, several chapters of one series fetched on the same day fold into a single row ("5 chapters, 3 unread") that opens on a tap, instead of five rows. Selecting chapters opens everything. Idea from Komikku and J2K.

@@ -504,6 +504,8 @@
     <string name="pref_panel_zoom_summary">The bubble gesture on artwork zooms to the panel under it. Where no panel is found, it zooms in as usual</string>
     <string name="updates_group_new_chapters">%1$d chapters, %2$d unread</string>
     <string name="updates_group_chapters">%1$d chapters</string>
+    <string name="action_merge_duplicates">Merge duplicates</string>
+    <string name="merge_duplicates_summary">Keep one entry. Chapters read or bookmarked in the others are marked in it, their categories are added to it, and the others leave the library. Nothing is deleted</string>
     <string name="action_hide_category">Hide from the library</string>
     <string name="action_unhide_category">Show in the library</string>
     <string name="action_show_hidden_categories">Show hidden categories</string>

@@ -16,6 +16,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.SearchToolbar
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.SwapCalls
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.FlipToBack
 import mihon.icons.materialsymbols.rounded.SelectAll
@@ -32,6 +33,7 @@ fun LibraryToolbar(
     onClickUnselectAll: () -> Unit,
     onClickSelectAll: () -> Unit,
     onClickInvertSelection: () -> Unit,
+    onClickMerge: () -> Unit,
     onClickFilter: () -> Unit,
     onClickRefresh: () -> Unit,
     onClickGlobalUpdate: () -> Unit,
@@ -45,6 +47,7 @@ fun LibraryToolbar(
         onClickUnselectAll = onClickUnselectAll,
         onClickSelectAll = onClickSelectAll,
         onClickInvertSelection = onClickInvertSelection,
+        onClickMerge = onClickMerge,
     )
     else -> LibraryRegularToolbar(
         title = title,
@@ -127,6 +130,7 @@ private fun LibrarySelectionToolbar(
     onClickUnselectAll: () -> Unit,
     onClickSelectAll: () -> Unit,
     onClickInvertSelection: () -> Unit,
+    onClickMerge: () -> Unit,
 ) {
     AppBar(
         titleContent = { Text(text = "$selectedCount") },
@@ -142,6 +146,11 @@ private fun LibrarySelectionToolbar(
                         title = stringResource(MR.strings.action_select_inverse),
                         icon = MaterialSymbols.Rounded.FlipToBack,
                         onClick = onClickInvertSelection,
+                    ),
+                    AppBar.Action(
+                        title = stringResource(MR.strings.action_merge_duplicates),
+                        icon = MaterialSymbols.Rounded.SwapCalls,
+                        onClick = onClickMerge,
                     ),
                 ),
             )
