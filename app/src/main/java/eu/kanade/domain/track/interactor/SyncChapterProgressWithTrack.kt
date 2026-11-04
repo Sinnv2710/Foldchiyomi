@@ -2,6 +2,7 @@ package eu.kanade.domain.track.interactor
 
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.track.model.toDbTrack
+import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.Tracker
 import logcat.LogPriority
@@ -18,7 +19,25 @@ class SyncChapterProgressWithTrack(
     private val updateChapter: UpdateChapter,
     private val upsertTrack: UpsertTrack,
     private val getChaptersByMangaId: GetChaptersByMangaId,
+    private val trackPreferences: TrackPreferences,
 ) {
+
+    /**
+     * Marks the chapters the tracker says were read as read here too. One way only: nothing is sent
+     * back, and no chapter is ever marked unread, so a stale tracker cannot undo local reading.
+     */
+    private suspend fun pullProgress(mangaId: Long, remoteTrack: Track) {
+        if (remoteTrack.lastChapterRead <= 0.0) return
+        val updates = getChaptersByMangaId.await(mangaId)
+            .filter { it.isRecognizedNumber && !it.read && it.chapterNumber <= remoteTrack.lastChapterRead }
+            .map { ChapterUpdate(it.id) { read = true } }
+        if (updates.isEmpty()) return
+        try {
+            updateChapter.awaitAll(updates)
+        } catch (e: Throwable) {
+            logcat(LogPriority.WARN, e)
+        }
+    }
 
     suspend fun await(
         mangaId: Long,
@@ -26,6 +45,7 @@ class SyncChapterProgressWithTrack(
         tracker: Tracker,
     ) {
         if (tracker !is EnhancedTracker) {
+            if (trackPreferences.pullTrackerProgress.get()) pullProgress(mangaId, remoteTrack)
             return
         }
 

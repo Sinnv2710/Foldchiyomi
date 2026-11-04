@@ -616,6 +616,8 @@
 
     <!-- Tracking section -->
     <string name="tracking_guide">Tracking guide</string>
+    <string name="pref_pull_tracker_progress">Read what the tracker says you read</string>
+    <string name="pref_pull_tracker_progress_summary">When a series is opened, mark chapters read here up to the chapter its tracker reports. Nothing is sent back and nothing is marked unread</string>
     <string name="pref_auto_update_manga_sync">Update progress after reading</string>
     <string name="pref_auto_update_manga_on_mark_read">Update progress when marked as read</string>
     <string name="services">Trackers</string>
