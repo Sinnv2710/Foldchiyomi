@@ -60,6 +60,7 @@ fun UpdateScreen(
     onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
     onOpenChapter: (UpdatesItem) -> Unit,
     onFilterClicked: () -> Unit,
+    onToggleGroup: (String) -> Unit,
     hasActiveFilters: Boolean,
 ) {
     BackHandler(enabled = state.selectionMode) {
@@ -128,6 +129,7 @@ fun UpdateScreen(
                             onClickCover = onClickCover,
                             onClickUpdate = onOpenChapter,
                             onDownloadChapter = onDownloadChapter,
+                            onToggleGroup = onToggleGroup,
                         )
                     }
                 }
@@ -234,4 +236,7 @@ private fun UpdatesBottomBar(
 sealed interface UpdatesUiModel {
     data class Header(val date: LocalDate) : UpdatesUiModel
     data class Item(val item: UpdatesItem) : UpdatesUiModel
+
+    /** Several chapters of one series fetched on one day, folded into a row. */
+    data class Group(val key: String, val items: List<UpdatesItem>, val expanded: Boolean) : UpdatesUiModel
 }
