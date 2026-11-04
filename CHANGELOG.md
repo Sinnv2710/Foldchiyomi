@@ -2,7 +2,7 @@
 
 All notable changes to Foldchiyomi are documented here. For the changes it inherits from Mihon, see [Mihon's changelog](https://github.com/mihonapp/mihon/blob/main/CHANGELOG.md).
 
-## [v1.8.2] - Unreleased
+## [v1.8.6] - 2026-11-05
 
 ### Added
 - **Merge duplicates in the library.** Select two or more entries of the same series (say, the same manga from two sources) and press the merge button in the top bar. Pick the one to keep: chapters read or bookmarked in the others are marked in it by chapter number, their categories are added to it, and the others leave the library. It only ever marks read, and nothing is deleted. Idea from Komikku, without its merged-source entries.
