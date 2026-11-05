@@ -152,7 +152,7 @@ abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
         columnCount: Int,
     ): List<Pair<Long, Bitmap?>> {
         // Resize to cover size
-        // The scaled grid draws covers up to about 140 dp wide, so the images are loaded sharper than the updates grid's.
+        // Sharper than the updates grid's, but small enough that a scrolling list of up to 40 stays within the widget's memory limit.
         val scaled = mode != WidgetMode.UPDATES
         val widthPx = (if (scaled) SCALED_COVER_WIDTH else CoverWidth).value.toInt().dpToPx
         val heightPx = (if (scaled) SCALED_COVER_HEIGHT else CoverHeight).value.toInt().dpToPx
@@ -198,9 +198,9 @@ abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
     enum class WidgetMode { UPDATES, LIBRARY, CONTINUE }
 
     companion object {
-        private val SCALED_COVER_WIDTH = 110.dp
-        private val SCALED_COVER_HEIGHT = 165.dp
-        private const val MAX_SCALED_COVERS = 20
+        private val SCALED_COVER_WIDTH = 90.dp
+        private val SCALED_COVER_HEIGHT = 135.dp
+        private const val MAX_SCALED_COVERS = 40
 
         val DateLimit: Instant
             get() = Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault())
