@@ -90,6 +90,30 @@ jobs:
           sha256sum Foldchiyomi-*.apk > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
+      # The source extensions (extensions/*) are separate Gradle projects, so the app build above does not
+      # make them. They are built here and signed with the release key, which lets one release update the
+      # last one in place. A failure here must not hold back the app, hence continue-on-error.
+      - name: Build and sign the source extensions
+        continue-on-error: true
+        env:
+          KS: ${{ runner.temp }}/foldchiyomi.jks
+          KS_PASS: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASS: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -e
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          for dir in extensions/*/; do
+            name=$(basename "$dir")
+            [ -f "$dir/build.gradle.kts" ] || continue
+            (cd "$dir" && ../../gradlew assembleDebug --stacktrace)
+            apk=$(ls "$dir"build/outputs/apk/debug/*-debug.apk | head -1)
+            "$apksigner" sign --ks "$KS" --ks-pass env:KS_PASS --key-pass env:KEY_PASS --ks-key-alias "$KEY_ALIAS" \
+              --out "Foldchiyomi-extension-$name-$TAG.apk" "$apk"
+          done
+          ls -la Foldchiyomi-extension-*.apk
+          sha256sum Foldchiyomi-extension-*.apk >> SHA256SUMS.txt
+
       - name: Remove the keystore
         if: always()
         run: rm -f "$RUNNER_TEMP/foldchiyomi.jks"
@@ -105,6 +129,8 @@ jobs:
             **Which file?** `Foldchiyomi-${{ github.ref_name }}-arm64-v8a.apk` for almost every modern phone. If you're not sure, `Foldchiyomi-${{ github.ref_name }}-universal.apk` works everywhere.
 
             No analytics, no crash reporting. Built by GitHub Actions from this tag; checksums are in `SHA256SUMS.txt`.
+
+            **Source extensions.** `Foldchiyomi-extension-<name>-${{ github.ref_name }}.apk` are optional sources (TruyenTuoiTho, Internet Archive). They are signed with the same key as the app, so a newer one installs over the older. Install one, then trust it under Browse > Extensions.
 
             **Found a bug?** Please [open an issue](https://github.com/GarrettKK/Foldchiyomi/issues/new/choose) rather than a Reddit comment, with your device, the app version and a screenshot. Comments get lost; issues get fixed.
 

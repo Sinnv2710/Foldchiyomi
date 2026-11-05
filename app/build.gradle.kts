@@ -37,8 +37,8 @@ android {
     defaultConfig {
         applicationId = "app.foldchiyomi"
 
-        versionCode = 19
-        versionName = "1.8.7"
+        versionCode = 20
+        versionName = "1.8.8"
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
