@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.FormBody
 import okhttp3.Headers
@@ -50,11 +51,21 @@ class TruyenTuoiThoWv : HttpSource() {
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.ROOT)
 
     private companion object {
-        const val WEBVIEW_TIMEOUT_SECONDS = 40L
-        const val POLL_MS = 600L
+        const val WEBVIEW_TIMEOUT_SECONDS = 45L
+        const val POLL_MS = 500L
+
+        // Equal polls in a row before a count is trusted: the page builds its images in waves a few seconds apart.
+        const val STABLE_POLLS = 8
+
+        // Pages only: the reading area also holds product-slider ads (`mtp-slide-img`) and emoji. Placeholders
+        // (no URL yet) are counted, so a lazy page is waited for. Each poll also scrolls on, which is what makes
+        // the page fill in the images that are still empty.
         const val IMAGES_JS =
-            "(function(){return JSON.stringify([].slice.call(document.querySelectorAll('.reading-content img'))" +
-                ".map(function(i){return i.getAttribute('data-src')||i.getAttribute('data-lazy-src')||i.currentSrc||i.src}))})()"
+            "(function(){var all=[].slice.call(document.querySelectorAll('.reading-content img'))" +
+                ".filter(function(i){return !i.classList.contains('mtp-slide-img')&&!i.classList.contains('emoji')&&!i.closest('.mtp-slider,.mtp-slide,[class*=mtp-]')});" +
+                "var urls=all.map(function(i){return i.getAttribute('data-src')||i.getAttribute('data-lazy-src')||i.currentSrc||i.src||''});" +
+                "window.scrollBy(0,window.innerHeight*2);" +
+                "return JSON.stringify({total:all.length,urls:urls})})()"
     }
 
     override fun headersBuilder(): Headers.Builder = super.headersBuilder().add("Referer", "$baseUrl/")
@@ -157,20 +168,27 @@ class TruyenTuoiThoWv : HttpSource() {
         var result: List<String>? = null
         val main = Handler(Looper.getMainLooper())
         var webView: WebView? = null
-        var lastCount = -1
+        var last = ""
+        var stable = 0
+        var best: List<String> = emptyList()
 
         fun poll() {
             val view = webView ?: return
             view.evaluateJavascript(IMAGES_JS) { raw ->
-                val urls = runCatching {
-                    json.parseToJsonElement(json.decodeFromString<String>(raw)).jsonArray.map { it.jsonPrimitive.content }
-                }.getOrNull().orEmpty().filter { it.startsWith("http") }
-                // The script adds images in one go; two equal counts in a row means it has finished.
-                if (urls.isNotEmpty() && urls.size == lastCount) {
-                    result = urls
+                val all = runCatching {
+                    json.parseToJsonElement(json.decodeFromString<String>(raw)).jsonObject["urls"]!!
+                        .jsonArray.map { it.jsonPrimitive.content }
+                }.getOrNull().orEmpty()
+                val loaded = all.filter { it.startsWith("http") }
+                if (loaded.size >= best.size) best = loaded
+                // Done when every image has its URL and the total has stopped growing for a few seconds.
+                val key = "${all.size}/${loaded.size}"
+                stable = if (key == last) stable + 1 else 0
+                last = key
+                if (all.isNotEmpty() && loaded.size == all.size && stable >= STABLE_POLLS) {
+                    result = loaded
                     done.countDown()
                 } else {
-                    lastCount = urls.size
                     main.postDelayed({ poll() }, POLL_MS)
                 }
             }
@@ -181,12 +199,16 @@ class TruyenTuoiThoWv : HttpSource() {
             webView = view
             view.settings.javaScriptEnabled = true
             view.settings.domStorageEnabled = true
+            // Detached views have no size, and a page that loads images when they come into view then loads none.
+            view.layout(0, 0, 1080, 1920)
             view.webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) = poll()
             }
             view.loadUrl(url)
         }
         done.await(WEBVIEW_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        // On a timeout, the pages that did load are better than an error.
+        if (result == null && best.isNotEmpty()) result = best
         main.post {
             webView?.stopLoading()
             webView?.destroy()
