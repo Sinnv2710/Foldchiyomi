@@ -6,14 +6,8 @@ All notable changes to Foldchiyomi are documented here. For the changes it inher
 
 ### Added
 - **Download all chapters, read ones too.** The download menu on a series page, and the one in the library's multi-select bar, now has **All chapters, read ones too**. It queues every chapter that is not downloaded yet, so a finished comic can be kept whole for offline reading. Chapters already downloaded or queued are skipped.
-
-### Added
 - **Move your entries off a broken source.** When **Check sources** finds sources that are not working, it now opens a list of them with how many of your library entries each holds, and a **Migrate** button for the one with the most. It opens that source's migration list. **Turn them off** is still there.
-
-### Added
 - **Reading section in Statistics.** More → Statistics now shows how many chapters you opened on each of the last 7 days, and your five most-read titles by time spent. Counts come from your reading history, so a chapter appears on the day it was last opened.
-
-### Added
 - **Two new home-screen widgets: Library and Continue reading.** The existing widget shows only recent chapter updates, so a comic you add to favorites did not appear on it. **Library** is a cover grid of your library, most recently read first. **Continue reading** shows entries you have started and not finished. The covers grow to fill the widget, so a wide widget on a Fold shows big covers, not small ones in the middle. With more comics than fit at a readable size, the widget scrolls (swipe it up and down) instead of shrinking them; it holds your 40 most recently read. Tapping a cover opens the entry. Both follow your library as it changes, and leave out entries that are only in hidden categories.
 
 ## [v1.8.8] - 2026-11-05
