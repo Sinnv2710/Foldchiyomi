@@ -2,7 +2,7 @@
 
 All notable changes to Foldchiyomi are documented here. For the changes it inherits from Mihon, see [Mihon's changelog](https://github.com/mihonapp/mihon/blob/main/CHANGELOG.md).
 
-## [Unreleased]
+## [v1.8.7] - 2026-11-05
 
 ### Added
 - **Completed tab in the library.** Off by default: **Library filter → Display → Completed tab**. An extra tab after your categories with every entry whose status is Completed or Publishing finished, whatever category it is in. It is not a real category, so it can't be renamed or deleted, and it only shows once something is completed. It sorts like your first tab; changing the sort while on it has no effect.
