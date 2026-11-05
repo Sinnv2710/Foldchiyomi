@@ -1098,6 +1098,10 @@
 
     <!-- App widget -->
     <string name="appwidget_updates_description">See your recently updated library entries</string>
+    <string name="appwidget_library_description">Your library, most recently read first</string>
+    <string name="appwidget_continue_description">Pick up what you have started and not finished</string>
+    <string name="label_widget_continue_reading">Continue reading</string>
+    <string name="information_widget_nothing_to_continue">Nothing started yet</string>
     <string name="appwidget_unavailable_locked">Widget not available when app lock is enabled</string>
     <string name="remove_manga">You are about to remove \"%s\" from your library</string>
 

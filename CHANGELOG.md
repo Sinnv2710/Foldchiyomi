@@ -2,6 +2,11 @@
 
 All notable changes to Foldchiyomi are documented here. For the changes it inherits from Mihon, see [Mihon's changelog](https://github.com/mihonapp/mihon/blob/main/CHANGELOG.md).
 
+## [Unreleased]
+
+### Added
+- **Two new home-screen widgets: Library and Continue reading.** The existing widget shows only recent chapter updates, so a comic you add to favorites did not appear on it. **Library** is a cover grid of your library, most recently read first. **Continue reading** shows entries you have started and not finished. The covers grow to fill the widget, so a wide widget on a Fold shows big covers, not small ones in the middle. With more comics than fit at a readable size, the widget scrolls (swipe it up and down) instead of shrinking them; it holds your 40 most recently read. Tapping a cover opens the entry. Both follow your library as it changes, and leave out entries that are only in hidden categories.
+
 ## [v1.8.8] - 2026-11-05
 
 ### Added
