@@ -5,6 +5,7 @@ All notable changes to Foldchiyomi are documented here. For the changes it inher
 ## [v1.8.7] - 2026-11-05
 
 ### Added
+- **Internet Archive (Tiếng Việt) source** (`extensions/archiveorg`). Vietnamese books and old comic scans from archive.org: 14,000+ items with page scans. One chapter per volume, so Dũng sĩ Hesman shows its 50 volumes. Build and install it like the BatCave one.
 - **TruyenTuoiTho (WebView) source** (`extensions/truyentuoitho`). Old Vietnamese comics: Thần đồng Đất Việt, 7 Viên Ngọc Rồng, Dũng sĩ Hesman and more. Keiyoushi's extension for the site shows one page per chapter since the site changed; this one reads the chapter in a WebView and gets them all (159 pages in the test chapter). Build and install it like the BatCave one.
 
 ### Added
