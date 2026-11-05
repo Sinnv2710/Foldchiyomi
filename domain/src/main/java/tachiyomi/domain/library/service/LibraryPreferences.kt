@@ -140,6 +140,9 @@ class LibraryPreferences(
 
     val categoryTabs: Preference<Boolean> = preferenceStore.getBoolean("display_category_tabs", true)
 
+    /** An extra library tab with every entry whose status is Completed or Publishing finished. */
+    val showCompletedTab: Preference<Boolean> = preferenceStore.getBoolean("display_completed_tab", false)
+
     val categoryNumberOfItems: Preference<Boolean> = preferenceStore.getBoolean("display_number_of_items", false)
 
     val categorizedDisplaySettings: Preference<Boolean> = preferenceStore.getBoolean("categorized_display", false)

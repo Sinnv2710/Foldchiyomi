@@ -509,6 +509,7 @@
     <string name="action_hide_category">Hide from the library</string>
     <string name="action_unhide_category">Show in the library</string>
     <string name="action_show_hidden_categories">Show hidden categories</string>
+    <string name="action_display_show_completed_tab">Completed tab</string>
     <string name="action_hide_hidden_categories">Hide hidden categories again</string>
     <string name="action_add_suggested_repo">Add the Keiyoushi repo</string>
     <string name="action_auto_scroll">Auto scroll</string>
