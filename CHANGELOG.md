@@ -2,7 +2,7 @@
 
 All notable changes to Foldchiyomi are documented here. For the changes it inherits from Mihon, see [Mihon's changelog](https://github.com/mihonapp/mihon/blob/main/CHANGELOG.md).
 
-## [Unreleased]
+## [v1.8.9] - 2026-11-05
 
 ### Added
 - **Download all chapters, read ones too.** The download menu on a series page, and the one in the library's multi-select bar, now has **All chapters, read ones too**. It queues every chapter that is not downloaded yet, so a finished comic can be kept whole for offline reading. Chapters already downloaded or queued are skipped.
