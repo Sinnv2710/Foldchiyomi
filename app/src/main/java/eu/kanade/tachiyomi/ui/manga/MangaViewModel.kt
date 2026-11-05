@@ -626,6 +626,14 @@ class MangaViewModel(
         return successState.chapters.getNextUnread(successState.manga)
     }
 
+    /** Every chapter not yet downloaded, read or not: for keeping a whole series offline. */
+    private fun getAllChaptersToDownload(): List<Chapter> {
+        val chapterItems = if (skipFiltered) filteredChapters.orEmpty() else allChapters.orEmpty()
+        return chapterItems
+            .filter { (_, dlStatus) -> dlStatus == Download.State.NOT_DOWNLOADED }
+            .map { it.chapter }
+    }
+
     private fun getUnreadChapters(): List<Chapter> {
         val chapterItems = if (skipFiltered) filteredChapters.orEmpty() else allChapters.orEmpty()
         return chapterItems
@@ -709,6 +717,7 @@ class MangaViewModel(
             DownloadAction.NEXT_25_CHAPTERS -> getUnreadChaptersSorted().take(25)
             DownloadAction.UNREAD_CHAPTERS -> getUnreadChapters()
             DownloadAction.BOOKMARKED_CHAPTERS -> getBookmarkedChapters()
+            DownloadAction.ALL_CHAPTERS -> getAllChaptersToDownload()
         }
         if (chaptersToDownload.isNotEmpty()) {
             startDownload(chaptersToDownload, false)

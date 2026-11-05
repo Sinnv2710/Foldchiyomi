@@ -5,6 +5,9 @@ All notable changes to Foldchiyomi are documented here. For the changes it inher
 ## [Unreleased]
 
 ### Added
+- **Download all chapters, read ones too.** The download menu on a series page, and the one in the library's multi-select bar, now has **All chapters, read ones too**. It queues every chapter that is not downloaded yet, so a finished comic can be kept whole for offline reading. Chapters already downloaded or queued are skipped.
+
+### Added
 - **Move your entries off a broken source.** When **Check sources** finds sources that are not working, it now opens a list of them with how many of your library entries each holds, and a **Migrate** button for the one with the most. It opens that source's migration list. **Turn them off** is still there.
 
 ### Added
