@@ -57,6 +57,7 @@
     <string name="sources_check_all_working">All %d sources answered</string>
     <string name="sources_check_some_broken">%1$d of %2$d sources are not working</string>
     <string name="action_disable_broken_sources">Turn them off</string>
+    <string name="action_migrate_broken_source">Migrate %s</string>
     <string name="action_check_source">Check connection</string>
     <string name="source_health_checking">Checking…</string>
     <string name="source_health_ok">Reachable</string>
@@ -853,6 +854,7 @@
     <string name="manga_download">Download</string>
     <string name="download_unread">Unread</string>
     <string name="download_bookmarked">Bookmarked</string>
+    <string name="download_all">All chapters, read ones too</string>
     <string name="custom_cover">Custom cover</string>
     <string name="manga_cover">Cover</string>
     <string name="cover_saved">Cover saved</string>
@@ -992,6 +994,9 @@
     <string name="label_overview_section">Overview</string>
     <string name="label_completed_titles">Completed entries</string>
     <string name="label_read_duration">Read duration</string>
+    <string name="label_reading_section">Reading</string>
+    <string name="label_chapters_last_days">Chapters opened, last 7 days</string>
+    <string name="label_most_read">Most read</string>
     <string name="label_titles_section">Entries</string>
     <string name="label_titles_in_global_update">In global update</string>
     <string name="label_total_chapters">Total</string>

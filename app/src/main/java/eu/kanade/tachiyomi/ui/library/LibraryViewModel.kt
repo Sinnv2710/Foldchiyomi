@@ -505,6 +505,7 @@ class LibraryViewModel(
             DownloadAction.NEXT_25_CHAPTERS -> downloadNextChapters(25)
             DownloadAction.UNREAD_CHAPTERS -> downloadNextChapters(null)
             DownloadAction.BOOKMARKED_CHAPTERS -> downloadBookmarkedChapters()
+            DownloadAction.ALL_CHAPTERS -> downloadAllChapters()
         }
         clearSelection()
     }
@@ -526,6 +527,27 @@ class LibraryViewModel(
                     }
                     .let { if (amount != null) it.take(amount) else it }
 
+                downloadManager.downloadChapters(manga, chapters)
+            }
+        }
+    }
+
+    /** Queues every chapter of the selected entries that is not downloaded or queued yet, read or not. */
+    private fun downloadAllChapters() {
+        val mangas = selectedManga
+        viewModelScope.launchNonCancellable {
+            mangas.forEach { manga ->
+                val chapters = getChaptersByMangaId.await(manga.id)
+                    .fastFilterNot { chapter ->
+                        downloadManager.getQueuedDownloadOrNull(chapter.id) != null ||
+                            downloadManager.isChapterDownloaded(
+                                chapter.name,
+                                chapter.scanlator,
+                                chapter.url,
+                                manga.title,
+                                manga.source,
+                            )
+                    }
                 downloadManager.downloadChapters(manga, chapters)
             }
         }
