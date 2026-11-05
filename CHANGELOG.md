@@ -9,7 +9,7 @@ All notable changes to Foldchiyomi are documented here. For the changes it inher
 - **TruyenTuoiTho (WebView) source** (`extensions/truyentuoitho`). Old Vietnamese comics: Thần đồng Đất Việt, 7 Viên Ngọc Rồng, Dũng sĩ Hesman and more. Keiyoushi's extension for the site shows one page per chapter since the site changed; this one reads the chapter in a WebView and gets them all (159 pages in the test chapter). Build and install it like the BatCave one.
 
 ### Added
-- **Completed tab in the library.** Off by default: **Library filter → Display → Completed tab**. An extra tab after your categories with every entry whose status is Completed or Publishing finished, whatever category it is in. It is not a real category, so it can't be renamed or deleted, and it only shows once something is completed. It sorts like your first tab; changing the sort while on it has no effect.
+- **Completed tab in the library.** Off by default: **Library filter → Display → Completed tab**. An extra tab after your categories with every entry whose status is Completed or Publishing finished, whatever category it is in. Entries that are only in hidden categories stay out of it. It is not a real category, so it can't be renamed or deleted, and it only shows once something is completed. It sorts like your first tab; changing the sort while on it has no effect.
 
 ### Fixed
 - **Guided reading lands on a panel after a page turn.** The first tap on a new page used to show the whole page before the next tap framed its first panel. It now goes straight to the first panel (or the last, going back).
