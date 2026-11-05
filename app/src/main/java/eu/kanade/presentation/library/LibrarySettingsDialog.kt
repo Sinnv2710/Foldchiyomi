@@ -292,6 +292,10 @@ private fun ColumnScope.DisplayPage(
         pref = viewModel.libraryPreferences.categoryTabs,
     )
     CheckboxItem(
+        label = stringResource(MR.strings.action_display_show_completed_tab),
+        pref = viewModel.libraryPreferences.showCompletedTab,
+    )
+    CheckboxItem(
         label = stringResource(MR.strings.action_display_show_number_of_items),
         pref = viewModel.libraryPreferences.categoryNumberOfItems,
     )

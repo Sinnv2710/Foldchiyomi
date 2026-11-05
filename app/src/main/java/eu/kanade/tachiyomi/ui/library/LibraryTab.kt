@@ -95,11 +95,12 @@ data object LibraryTab : Tab {
         val snackbarHostState = remember { SnackbarHostState() }
 
         val onClickRefresh: (Category?) -> Boolean = { category ->
-            val started = LibraryUpdateJob.startNow(context.workManager, category)
+            // The Completed tab is made up, so there is no category to update: refresh everything.
+            val started = LibraryUpdateJob.startNow(context.workManager, category?.takeUnless { it.isCompletedCategory })
             scope.launch {
                 val msgRes = when {
                     !started -> MR.strings.update_already_running
-                    category != null -> MR.strings.updating_category
+                    category != null && !category.isCompletedCategory -> MR.strings.updating_category
                     else -> MR.strings.updating_library
                 }
                 snackbarHostState.showSnackbar(context.stringResource(msgRes))
@@ -112,6 +113,7 @@ data object LibraryTab : Tab {
                 val title = state.getToolbarTitle(
                     defaultTitle = stringResource(MR.strings.label_library),
                     defaultCategoryTitle = stringResource(MR.strings.label_default),
+                    completedCategoryTitle = stringResource(MR.strings.completed),
                     page = state.coercedActiveCategoryIndex,
                 )
                 LibraryToolbar(

@@ -138,8 +138,15 @@ class LibraryViewModel(
             getCategories.subscribe(),
             libraryPreferences.hiddenCategories.changes(),
             libraryPreferences.showHiddenCategories.changes(),
-        ) { categories, hidden, showHidden ->
-            if (showHidden) categories else categories.filterNot { it.id.toString() in hidden }
+            libraryPreferences.showCompletedTab.changes(),
+        ) { categories, hidden, showHidden, showCompleted ->
+            val shown = if (showHidden) categories else categories.filterNot { it.id.toString() in hidden }
+            // Sorted and laid out like the first tab, since there is nothing stored to read them from.
+            if (showCompleted) {
+                shown + Category(Category.COMPLETED_ID, "", Long.MAX_VALUE, shown.firstOrNull()?.flags ?: 0L)
+            } else {
+                shown
+            }
         },
         getFavoritesFlow(),
         combine(getTracksPerManga.subscribe(), getTrackingFiltersFlow(), ::Pair),
@@ -290,8 +297,10 @@ class LibraryViewModel(
                 groupCache.getOrPut(categoryId) { mutableListOf() }.add(item.id)
             }
         }
-        return categories.filter { showSystemCategory || !it.isSystemCategory }
-            .associateWith { groupCache[it.id]?.toList().orEmpty() }
+        val completed = filter { it.libraryManga.manga.status.toInt() in COMPLETED_STATUSES }.map { it.id }
+        return categories
+            .filter { (showSystemCategory || !it.isSystemCategory) && (!it.isCompletedCategory || completed.isNotEmpty()) }
+            .associateWith { if (it.isCompletedCategory) completed else groupCache[it.id]?.toList().orEmpty() }
     }
 
     private fun Map<Category, List</* LibraryItem */ Long>>.applySort(
@@ -720,7 +729,7 @@ class LibraryViewModel(
             val mangaList = selectedManga
 
             // Hide the default category because it has a different behavior than the ones from db.
-            val categories = state.value.displayedCategories.filter { it.id != 0L }
+            val categories = state.value.displayedCategories.filter { it.id > 0L }
 
             val mangaCategoryIds = mangaList.map { getCategoryIds(it) }
             val common = mangaCategoryIds.reduceOrNull { set1, set2 -> set1 intersect set2 }.orEmpty()
@@ -884,11 +893,16 @@ class LibraryViewModel(
         fun getToolbarTitle(
             defaultTitle: String,
             defaultCategoryTitle: String,
+            completedCategoryTitle: String,
             page: Int,
         ): LibraryToolbarTitle {
             val category = displayedCategories.getOrNull(page) ?: return LibraryToolbarTitle(defaultTitle)
             val categoryName = category.let {
-                if (it.isSystemCategory) defaultCategoryTitle else it.name
+                when {
+                    it.isSystemCategory -> defaultCategoryTitle
+                    it.isCompletedCategory -> completedCategoryTitle
+                    else -> it.name
+                }
             }
             val title = if (showCategoryTabs) defaultTitle else categoryName
             val count = when {
@@ -901,3 +915,6 @@ class LibraryViewModel(
         }
     }
 }
+
+/** Statuses that count as finished: Completed and Publishing finished. */
+private val COMPLETED_STATUSES = setOf(SManga.COMPLETED, SManga.PUBLISHING_FINISHED)
