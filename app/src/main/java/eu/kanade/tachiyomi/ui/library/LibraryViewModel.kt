@@ -297,7 +297,12 @@ class LibraryViewModel(
                 groupCache.getOrPut(categoryId) { mutableListOf() }.add(item.id)
             }
         }
-        val completed = filter { it.libraryManga.manga.status.toInt() in COMPLETED_STATUSES }.map { it.id }
+        // Entries that sit only in hidden categories stay out of the Completed tab too.
+        val visibleIds = categories.mapTo(HashSet()) { it.id }
+        val completed = filter {
+            it.libraryManga.manga.status.toInt() in COMPLETED_STATUSES &&
+                it.libraryManga.categories.any { id -> id in visibleIds }
+        }.map { it.id }
         return categories
             .filter { (showSystemCategory || !it.isSystemCategory) && (!it.isCompletedCategory || completed.isNotEmpty()) }
             .associateWith { if (it.isCompletedCategory) completed else groupCache[it.id]?.toList().orEmpty() }
