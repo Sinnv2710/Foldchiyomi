@@ -25,6 +25,7 @@ import tachiyomi.core.common.Constants
 import tachiyomi.i18n.MR
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.presentation.widget.util.calculateRowAndColumnCount
+import tachiyomi.presentation.widget.util.fitCovers
 
 @Composable
 fun UpdatesWidget(
@@ -33,6 +34,7 @@ fun UpdatesWidget(
     topPadding: Dp,
     bottomPadding: Dp,
     emptyText: dev.icerock.moko.resources.StringResource = MR.strings.information_no_recent,
+    scaled: Boolean = false,
     modifier: GlanceModifier = GlanceModifier,
 ) {
     Box(
@@ -47,7 +49,10 @@ fun UpdatesWidget(
                 style = TextStyle(color = contentColor),
             )
         } else {
-            val (rowCount, columnCount) = LocalSize.current.calculateRowAndColumnCount(topPadding, bottomPadding)
+            // The scaled grid (Library, Continue reading) sizes the covers to the widget; the updates widget keeps its own.
+            val grid = if (scaled) LocalSize.current.fitCovers(data.size, topPadding, bottomPadding) else null
+            val (rowCount, columnCount) = grid?.let { it.rows to it.columns }
+                ?: LocalSize.current.calculateRowAndColumnCount(topPadding, bottomPadding)
             Column(
                 modifier = GlanceModifier.fillMaxHeight(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -86,6 +91,8 @@ fun UpdatesWidget(
                                     UpdatesMangaCover(
                                         cover = cover,
                                         modifier = GlanceModifier.clickable(actionStartActivity(intent)),
+                                        width = grid?.coverWidth ?: CoverWidth,
+                                        height = grid?.coverHeight ?: CoverHeight,
                                     )
                                 }
                             }
