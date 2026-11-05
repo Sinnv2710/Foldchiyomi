@@ -992,6 +992,9 @@
     <string name="label_overview_section">Overview</string>
     <string name="label_completed_titles">Completed entries</string>
     <string name="label_read_duration">Read duration</string>
+    <string name="label_reading_section">Reading</string>
+    <string name="label_chapters_last_days">Chapters opened, last 7 days</string>
+    <string name="label_most_read">Most read</string>
     <string name="label_titles_section">Entries</string>
     <string name="label_titles_in_global_update">In global update</string>
     <string name="label_total_chapters">Total</string>

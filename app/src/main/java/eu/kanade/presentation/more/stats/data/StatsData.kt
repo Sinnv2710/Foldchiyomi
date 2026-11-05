@@ -20,6 +20,11 @@ sealed interface StatsData {
         val downloadCount: Int,
     ) : StatsData
 
+    data class Reading(
+        val mostRead: List<Pair<String, Long>>,
+        val chaptersPerDay: List<Pair<Int, Int>>,
+    ) : StatsData
+
     data class Trackers(
         val trackedTitleCount: Int,
         val meanScore: Double,

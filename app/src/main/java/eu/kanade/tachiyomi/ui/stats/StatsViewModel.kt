@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.domain.history.interactor.GetReadingStats
 import tachiyomi.domain.history.interactor.GetTotalReadDuration
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -37,6 +38,7 @@ class StatsViewModel(
     private val downloadManager: DownloadManager,
     private val getLibraryManga: GetLibraryManga,
     private val getTotalReadDuration: GetTotalReadDuration,
+    private val getReadingStats: GetReadingStats,
     private val getTracks: GetTracks,
     private val preferences: LibraryPreferences,
     private val trackerManager: TrackerManager,
@@ -78,6 +80,11 @@ class StatsViewModel(
                 downloadCount = downloadManager.getDownloadCount(),
             )
 
+            val readingStatData = StatsData.Reading(
+                mostRead = getReadingStats.mostRead(),
+                chaptersPerDay = getReadingStats.chaptersPerDay(),
+            )
+
             val trackersStatData = StatsData.Trackers(
                 trackedTitleCount = mangaTrackMap.count { it.value.isNotEmpty() },
                 meanScore = meanScore,
@@ -89,6 +96,7 @@ class StatsViewModel(
                     overview = overviewStatData,
                     titles = titlesStatData,
                     chapters = chaptersStatData,
+                    reading = readingStatData,
                     trackers = trackersStatData,
                 )
             }
