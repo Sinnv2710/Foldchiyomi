@@ -2,6 +2,11 @@
 
 All notable changes to Foldchiyomi are documented here. For the changes it inherits from Mihon, see [Mihon's changelog](https://github.com/mihonapp/mihon/blob/main/CHANGELOG.md).
 
+## [Unreleased]
+
+### Fixed
+- **TruyenTuoiTho (WebView) lists whole chapters.** It stopped at the first wave of images, so some chapters lost their last ~45 pages; it also took the site's product ads for pages and missed pages that load as you scroll. It now skips ads, scrolls the page, waits until the image count settles, and returns what it has if the site is slow. Chapters the site's own image proxy fails on still show blank pages.
+
 ## [v1.8.7] - 2026-11-05
 
 ### Added
