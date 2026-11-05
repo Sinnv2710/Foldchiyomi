@@ -13,6 +13,12 @@ interface HistoryRepository {
 
     suspend fun getTotalReadDuration(): Long
 
+    /** The [limit] titles with the most time spent reading, longest first, as (title, milliseconds). */
+    suspend fun getMostRead(limit: Long): List<Pair<String, Long>>
+
+    /** When each chapter read after [since] (epoch milliseconds) was last read. */
+    suspend fun getReadAtSince(since: Long): List<Long>
+
     suspend fun getHistoryByMangaId(mangaId: Long): List<History>
 
     suspend fun resetHistory(historyId: Long)

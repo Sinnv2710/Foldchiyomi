@@ -1,6 +1,14 @@
 package eu.kanade.presentation.more.stats
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -45,6 +53,9 @@ fun StatsScreenContent(
         }
         item {
             ChapterStats(state.chapters)
+        }
+        item {
+            ReadingStats(state.reading)
         }
         item {
             TrackerStats(state.trackers)
@@ -157,6 +168,66 @@ private fun LazyItemScope.TrackerStats(
                 data.trackerCount.toString(),
                 stringResource(MR.strings.label_used),
             )
+        }
+    }
+}
+
+@Composable
+private fun LazyItemScope.ReadingStats(
+    data: StatsData.Reading,
+) {
+    val none = stringResource(MR.strings.none)
+    val context = LocalContext.current
+    SectionCard(MR.strings.label_reading_section) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = MaterialTheme.padding.medium),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        ) {
+            Text(
+                text = stringResource(MR.strings.label_chapters_last_days),
+                style = MaterialTheme.typography.titleSmall,
+            )
+            val maxCount = (data.chaptersPerDay.maxOfOrNull { it.second } ?: 0).coerceAtLeast(1)
+            data.chaptersPerDay.forEach { (day, count) ->
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Text(text = day.toString(), modifier = Modifier.width(28.dp), style = MaterialTheme.typography.bodySmall)
+                    Box(
+                        modifier = Modifier
+                            .height(10.dp)
+                            .width((200f * count / maxCount).dp.coerceAtLeast(if (count > 0) 4.dp else 0.dp))
+                            .background(MaterialTheme.colorScheme.primary),
+                    )
+                    Text(
+                        text = if (count > 0) "  $count" else "",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+            Text(
+                text = stringResource(MR.strings.label_most_read),
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(top = MaterialTheme.padding.small),
+            )
+            if (data.mostRead.isEmpty()) {
+                Text(text = none, style = MaterialTheme.typography.bodyMedium)
+            } else {
+                data.mostRead.forEach { (title, millis) ->
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = millis.toDuration(DurationUnit.MILLISECONDS).toDurationString(context, fallback = none),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+            }
         }
     }
 }

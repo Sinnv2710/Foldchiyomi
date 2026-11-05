@@ -49,3 +49,17 @@ ON CONFLICT(chapter_id) DO UPDATE SET
 getReadDuration:
 SELECT coalesce(sum(read_duration), 0)
 FROM history;
+
+getMostRead:
+SELECT manga.remote_title AS title, sum(history.read_duration) AS duration
+FROM history
+JOIN manga ON manga.id = history.manga_id
+WHERE history.read_duration > 0
+GROUP BY history.manga_id
+ORDER BY duration DESC
+LIMIT :limit;
+
+getReadAtSince:
+SELECT read_at
+FROM history
+WHERE read_at > :since;

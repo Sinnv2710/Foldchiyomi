@@ -42,6 +42,18 @@ class HistoryRepositoryImpl(
             .awaitAsOne()
     }
 
+    override suspend fun getMostRead(limit: Long): List<Pair<String, Long>> {
+        return database.historyQueries
+            .getMostRead(limit) { title, duration -> title to (duration ?: 0L) }
+            .awaitAsList()
+    }
+
+    override suspend fun getReadAtSince(since: Long): List<Long> {
+        return database.historyQueries
+            .getReadAtSince(java.util.Date(since)) { readAt -> readAt?.time ?: 0L }
+            .awaitAsList()
+    }
+
     override suspend fun getHistoryByMangaId(mangaId: Long): List<History> {
         return database.historyQueries
             .getHistoryByMangaId(mangaId, HistoryMapper::mapHistory)

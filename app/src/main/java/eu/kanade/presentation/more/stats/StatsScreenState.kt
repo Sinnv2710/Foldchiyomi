@@ -12,6 +12,7 @@ sealed interface StatsScreenState {
         val overview: StatsData.Overview,
         val titles: StatsData.Titles,
         val chapters: StatsData.Chapters,
+        val reading: StatsData.Reading,
         val trackers: StatsData.Trackers,
     ) : StatsScreenState
 }
