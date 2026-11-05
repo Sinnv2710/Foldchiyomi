@@ -35,5 +35,32 @@
                 android:value="true" />
         </receiver>
 
+        <receiver
+            android:name="tachiyomi.presentation.widget.LibraryGridGlanceReceiver"
+            android:enabled="@bool/glance_appwidget_available"
+            android:exported="false"
+            android:label="@string/label_library">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/library_grid_homescreen_widget_info" />
+        </receiver>
+        <receiver
+            android:name="tachiyomi.presentation.widget.ContinueReadingGridGlanceReceiver"
+            android:enabled="@bool/glance_appwidget_available"
+            android:exported="false"
+            android:label="@string/label_widget_continue_reading">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/continue_reading_grid_homescreen_widget_info" />
+        </receiver>
+
     </application>
 </manifest>

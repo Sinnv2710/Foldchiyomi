@@ -32,6 +32,7 @@ fun UpdatesWidget(
     contentColor: ColorProvider,
     topPadding: Dp,
     bottomPadding: Dp,
+    emptyText: dev.icerock.moko.resources.StringResource = MR.strings.information_no_recent,
     modifier: GlanceModifier = GlanceModifier,
 ) {
     Box(
@@ -42,7 +43,7 @@ fun UpdatesWidget(
             CircularProgressIndicator(color = contentColor)
         } else if (data.isEmpty()) {
             Text(
-                text = LocalContext.current.stringResource(MR.strings.information_no_recent),
+                text = LocalContext.current.stringResource(emptyText),
                 style = TextStyle(color = contentColor),
             )
         } else {

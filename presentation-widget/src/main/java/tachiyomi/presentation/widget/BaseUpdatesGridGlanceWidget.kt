@@ -34,6 +34,7 @@ import dev.zacsweers.metro.HasMemberInjections
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.util.system.dpToPx
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -41,13 +42,16 @@ import kotlinx.datetime.minus
 import mihon.core.metro.metroGraph
 import mihon.presentation.widget.di.PresentationWidgetGraph
 import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.domain.library.model.LibraryManga
+import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.manga.interactor.GetLibraryManga
 import tachiyomi.domain.manga.model.MangaCover
 import tachiyomi.domain.updates.interactor.GetUpdates
-import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.presentation.widget.components.CoverHeight
 import tachiyomi.presentation.widget.components.CoverWidth
 import tachiyomi.presentation.widget.components.LockedWidget
 import tachiyomi.presentation.widget.components.UpdatesWidget
+import tachiyomi.i18n.MR
 import tachiyomi.presentation.widget.util.appWidgetBackgroundRadius
 import tachiyomi.presentation.widget.util.calculateRowAndColumnCount
 import kotlin.time.Clock
@@ -58,7 +62,14 @@ abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
 
     @Inject private lateinit var getUpdates: GetUpdates
 
+    @Inject private lateinit var getLibraryManga: GetLibraryManga
+
+    @Inject private lateinit var libraryPreferences: LibraryPreferences
+
     @Inject private lateinit var preferences: SecurityPreferences
+
+    /** What the grid shows: recent chapter updates (the original widget), the library, or what to read on. */
+    protected open val mode: WidgetMode = WidgetMode.UPDATES
 
     override val sizeMode = SizeMode.Exact
 
@@ -95,11 +106,7 @@ abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
             }
 
             val flow = remember {
-                getUpdates
-                    .subscribe(false, DateLimit.toEpochMilliseconds())
-                    .map { rawData ->
-                        rawData.prepareData(context, rowCount, columnCount)
-                    }
+                covers().map { rawData -> rawData.prepareData(context, rowCount, columnCount) }
             }
             val data by flow.collectAsState(initial = null)
             UpdatesWidget(
@@ -107,13 +114,37 @@ abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
                 contentColor = foreground,
                 topPadding = topPadding,
                 bottomPadding = bottomPadding,
+                emptyText = when (mode) {
+                    WidgetMode.UPDATES -> MR.strings.information_no_recent
+                    WidgetMode.LIBRARY -> MR.strings.information_empty_library
+                    WidgetMode.CONTINUE -> MR.strings.information_widget_nothing_to_continue
+                },
                 modifier = containerModifier,
             )
         }
     }
 
+    private fun covers(): Flow<List<WidgetCover>> = when (mode) {
+        WidgetMode.UPDATES -> getUpdates.subscribe(false, DateLimit.toEpochMilliseconds()).map { updates ->
+            updates.distinctBy { it.mangaId }.map {
+                WidgetCover(it.mangaId, it.sourceId, it.coverData.url, it.coverData.lastModified)
+            }
+        }
+        WidgetMode.LIBRARY, WidgetMode.CONTINUE -> getLibraryManga.subscribe().map { library ->
+            // Entries that sit only in hidden categories stay out of the widget as well.
+            val hidden = libraryPreferences.hiddenCategories.get()
+            library
+                .filter { entry -> entry.categories.any { it.toString() !in hidden } }
+                .filter { mode == WidgetMode.LIBRARY || (it.hasStarted && it.unreadCount > 0) }
+                .sortedWith(compareByDescending<LibraryManga> { it.lastRead }.thenBy { it.manga.title.lowercase() })
+                .map {
+                    WidgetCover(it.manga.id, it.manga.source, it.manga.thumbnailUrl, it.manga.coverLastModified)
+                }
+        }
+    }
+
     @OptIn(ExperimentalCoilApi::class)
-    private suspend fun List<UpdatesWithRelations>.prepareData(
+    private suspend fun List<WidgetCover>.prepareData(
         context: Context,
         rowCount: Int,
         columnCount: Int,
@@ -124,7 +155,6 @@ abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
         val roundPx = context.resources.getDimension(R.dimen.appwidget_inner_radius)
         return withIOContext {
             this@prepareData
-                .distinctBy { it.mangaId }
                 .take(rowCount * columnCount)
                 .map { updatesView ->
                     val request = ImageRequest.Builder(context)
@@ -133,8 +163,8 @@ abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
                                 mangaId = updatesView.mangaId,
                                 sourceId = updatesView.sourceId,
                                 isMangaFavorite = true,
-                                url = updatesView.coverData.url,
-                                lastModified = updatesView.coverData.lastModified,
+                                url = updatesView.url,
+                                lastModified = updatesView.lastModified,
                             ),
                         )
                         .memoryCachePolicy(CachePolicy.DISABLED)
@@ -157,6 +187,11 @@ abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
                 }
         }
     }
+
+    /** One cover to draw, whichever list it came from. */
+    data class WidgetCover(val mangaId: Long, val sourceId: Long, val url: String?, val lastModified: Long)
+
+    enum class WidgetMode { UPDATES, LIBRARY, CONTINUE }
 
     companion object {
         val DateLimit: Instant
