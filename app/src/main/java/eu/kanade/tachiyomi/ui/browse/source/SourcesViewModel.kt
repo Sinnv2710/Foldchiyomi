@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.manga.interactor.GetLibraryManga
 import tachiyomi.domain.source.model.Pin
 import tachiyomi.domain.source.model.Source
 import tachiyomi.source.local.isLocal
@@ -45,6 +46,7 @@ class SourcesViewModel(
     private val toggleSource: ToggleSource,
     private val toggleSourcePin: ToggleSourcePin,
     private val checkSourceHealth: CheckSourceHealth,
+    private val getLibraryManga: GetLibraryManga,
 ) : ViewModel() {
 
     private val _events = Channel<Event>(Int.MAX_VALUE)
@@ -142,7 +144,10 @@ class SourcesViewModel(
             }
             // Cloudflare is not "broken": the source works once the check is passed in the WebView.
             val broken = sources.filter { health.value[it.id] in BROKEN }
-            _events.send(Event.CheckFinished(total = sources.size, broken = broken))
+            // How many of your library entries each broken source holds, so migration can start with the biggest.
+            val perSource = getLibraryManga.await().groupingBy { it.manga.source }.eachCount()
+            val entries = broken.associate { it.id to (perSource[it.id] ?: 0) }
+            _events.send(Event.CheckFinished(total = sources.size, broken = broken, libraryEntries = entries))
         }
     }
 
@@ -160,7 +165,11 @@ class SourcesViewModel(
 
     sealed interface Event {
         data object FailedFetchingSources : Event
-        data class CheckFinished(val total: Int, val broken: List<Source>) : Event
+        data class CheckFinished(
+            val total: Int,
+            val broken: List<Source>,
+            val libraryEntries: Map<Long, Int> = emptyMap(),
+        ) : Event
     }
 
     data class Dialog(val source: Source)

@@ -57,6 +57,7 @@
     <string name="sources_check_all_working">All %d sources answered</string>
     <string name="sources_check_some_broken">%1$d of %2$d sources are not working</string>
     <string name="action_disable_broken_sources">Turn them off</string>
+    <string name="action_migrate_broken_source">Migrate %s</string>
     <string name="action_check_source">Check connection</string>
     <string name="source_health_checking">Checking…</string>
     <string name="source_health_ok">Reachable</string>

@@ -5,6 +5,9 @@ All notable changes to Foldchiyomi are documented here. For the changes it inher
 ## [Unreleased]
 
 ### Added
+- **Move your entries off a broken source.** When **Check sources** finds sources that are not working, it now opens a list of them with how many of your library entries each holds, and a **Migrate** button for the one with the most. It opens that source's migration list. **Turn them off** is still there.
+
+### Added
 - **Reading section in Statistics.** More → Statistics now shows how many chapters you opened on each of the last 7 days, and your five most-read titles by time spent. Counts come from your reading history, so a chapter appears on the day it was last opened.
 
 ### Added

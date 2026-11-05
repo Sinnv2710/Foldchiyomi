@@ -1,7 +1,13 @@
 package eu.kanade.tachiyomi.ui.browse.source
 
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import eu.kanade.tachiyomi.ui.browse.migration.manga.MigrateMangaScreen
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -85,25 +91,62 @@ fun Screen.sourcesTab(): TabContent {
             val allWorkingString = stringResource(MR.strings.sources_check_all_working)
             val brokenString = stringResource(MR.strings.sources_check_some_broken)
             val disableString = stringResource(MR.strings.action_disable_broken_sources)
+            val migrateString = stringResource(MR.strings.action_migrate_broken_source)
+            var brokenResult by remember { mutableStateOf<SourcesViewModel.Event.CheckFinished?>(null) }
+            brokenResult?.let { result ->
+                // The broken source with the most entries in the library is the one worth migrating first.
+                val target = result.broken
+                    .filter { (result.libraryEntries[it.id] ?: 0) > 0 }
+                    .maxByOrNull { result.libraryEntries[it.id] ?: 0 }
+                AlertDialog(
+                    onDismissRequest = { brokenResult = null },
+                    title = { Text(brokenString.format(result.broken.size, result.total)) },
+                    text = {
+                        Text(
+                            result.broken.joinToString("\n") { source ->
+                                val count = result.libraryEntries[source.id] ?: 0
+                                if (count > 0) "${source.name} ($count)" else source.name
+                            },
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.disableSources(result.broken)
+                                brokenResult = null
+                            },
+                        ) { Text(disableString) }
+                    },
+                    dismissButton = {
+                        if (target != null) {
+                            TextButton(
+                                onClick = {
+                                    brokenResult = null
+                                    navigator.push(MigrateMangaScreen(target.id))
+                                },
+                            ) { Text(migrateString.format(target.name)) }
+                        } else {
+                            TextButton(onClick = { brokenResult = null }) { Text(stringResource(MR.strings.action_cancel)) }
+                        }
+                    },
+                )
+            }
             LaunchedEffect(Unit) {
                 viewModel.events.collectLatest { event ->
                     when (event) {
                         SourcesViewModel.Event.FailedFetchingSources -> {
                             launch { snackbarHostState.showSnackbar(internalErrString) }
                         }
-                        is SourcesViewModel.Event.CheckFinished -> launch {
-                            val message = if (event.broken.isEmpty()) {
-                                allWorkingString.format(event.total)
+                                        is SourcesViewModel.Event.CheckFinished -> launch {
+                            if (event.broken.isEmpty()) {
+                                snackbarHostState.showSnackbar(
+                                    message = allWorkingString.format(event.total),
+                                    withDismissAction = true,
+                                    duration = SnackbarDuration.Long,
+                                )
                             } else {
-                                brokenString.format(event.broken.size, event.total)
+                                brokenResult = event
                             }
-                            val result = snackbarHostState.showSnackbar(
-                                message = message,
-                                actionLabel = disableString.takeIf { event.broken.isNotEmpty() },
-                                withDismissAction = true,
-                                duration = SnackbarDuration.Long,
-                            )
-                            if (result == SnackbarResult.ActionPerformed) viewModel.disableSources(event.broken)
                         }
                     }
                 }
