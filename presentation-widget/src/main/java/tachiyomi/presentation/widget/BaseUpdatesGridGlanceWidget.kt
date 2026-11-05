@@ -7,6 +7,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -114,6 +115,7 @@ abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
                 contentColor = foreground,
                 topPadding = topPadding,
                 bottomPadding = bottomPadding,
+                scaled = mode != WidgetMode.UPDATES,
                 emptyText = when (mode) {
                     WidgetMode.UPDATES -> MR.strings.information_no_recent
                     WidgetMode.LIBRARY -> MR.strings.information_empty_library
@@ -150,12 +152,14 @@ abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
         columnCount: Int,
     ): List<Pair<Long, Bitmap?>> {
         // Resize to cover size
-        val widthPx = CoverWidth.value.toInt().dpToPx
-        val heightPx = CoverHeight.value.toInt().dpToPx
+        // The scaled grid draws covers up to about 140 dp wide, so the images are loaded sharper than the updates grid's.
+        val scaled = mode != WidgetMode.UPDATES
+        val widthPx = (if (scaled) SCALED_COVER_WIDTH else CoverWidth).value.toInt().dpToPx
+        val heightPx = (if (scaled) SCALED_COVER_HEIGHT else CoverHeight).value.toInt().dpToPx
         val roundPx = context.resources.getDimension(R.dimen.appwidget_inner_radius)
         return withIOContext {
             this@prepareData
-                .take(rowCount * columnCount)
+                .take(if (scaled) MAX_SCALED_COVERS else rowCount * columnCount)
                 .map { updatesView ->
                     val request = ImageRequest.Builder(context)
                         .data(
@@ -194,6 +198,10 @@ abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
     enum class WidgetMode { UPDATES, LIBRARY, CONTINUE }
 
     companion object {
+        private val SCALED_COVER_WIDTH = 110.dp
+        private val SCALED_COVER_HEIGHT = 165.dp
+        private const val MAX_SCALED_COVERS = 20
+
         val DateLimit: Instant
             get() = Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault())
     }
