@@ -2014,10 +2014,17 @@ open class WebGpuViewer(
      * Guided reading: steps to the next panel of the page instead of turning it, and falls back to
      * [turn] where the page has no further panel. Returns true when it took over the move.
      */
+    private var guidedJob: Job? = null
+
     private fun guided(delta: Int, turn: () -> Unit): Boolean {
         if (!config.guidedReading || isContinuous || activity.viewModel.state.value.menuVisible) return false
-        scope.launch {
-            if (!pager.state.stepPanel(delta)) turn()
+        // A tap while the last one is still turning the page would turn it again.
+        if (guidedJob?.isActive == true) return true
+        guidedJob = scope.launch {
+            if (!pager.state.stepPanel(delta)) {
+                turn()
+                pager.state.enterPanel(delta)
+            }
         }
         return true
     }

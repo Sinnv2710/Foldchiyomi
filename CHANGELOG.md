@@ -2,6 +2,11 @@
 
 All notable changes to Foldchiyomi are documented here. For the changes it inherits from Mihon, see [Mihon's changelog](https://github.com/mihonapp/mihon/blob/main/CHANGELOG.md).
 
+## [Unreleased]
+
+### Fixed
+- **Guided reading lands on a panel after a page turn.** The first tap on a new page used to show the whole page before the next tap framed its first panel. It now goes straight to the first panel (or the last, going back).
+
 ## [v1.8.6] - 2026-11-05
 
 ### Added
