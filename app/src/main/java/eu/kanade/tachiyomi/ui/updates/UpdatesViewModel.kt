@@ -14,7 +14,6 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
-import eu.kanade.core.util.insertSeparators
 import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.updates.UpdatesUiModel
@@ -43,6 +42,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import logcat.LogPriority
@@ -92,6 +92,9 @@ class UpdatesViewModel(
     private val selectedChapterIds = MutableStateFlow(emptySet<Long>())
 
     private val dialog = MutableStateFlow<Dialog?>(null)
+
+    /** Keys of the groups opened by hand, see [State.getUiModel]. */
+    private val expandedGroups = MutableStateFlow(emptySet<String>())
 
     private val downloadStates = MutableStateFlow(emptyMap<Long, DownloadProgress>())
 
@@ -168,9 +171,10 @@ class UpdatesViewModel(
         selectedChapterIds,
         downloadStates,
         dialog,
-        hasActiveFilters,
-    ) { items, selectedIds, downloads, dialog, hasActiveFilters ->
+        combine(hasActiveFilters, expandedGroups, ::Pair),
+    ) { items, selectedIds, downloads, dialog, (hasActiveFilters, expanded) ->
         State(
+            expandedGroups = expanded,
             isLoading = items == null,
             hasActiveFilters = hasActiveFilters,
             items = items.orEmpty().map { item ->
@@ -347,6 +351,10 @@ class UpdatesViewModel(
         toggleAllSelection(false)
     }
 
+    fun toggleGroup(key: String) {
+        expandedGroups.update { if (key in it) it - key else it + key }
+    }
+
     fun showConfirmDeleteChapters(updatesItem: List<UpdatesItem>) {
         setDialog(Dialog.DeleteConfirmation(updatesItem))
     }
@@ -482,22 +490,46 @@ class UpdatesViewModel(
         val hasActiveFilters: Boolean = false,
         val items: List<UpdatesItem> = listOf(),
         val dialog: Dialog? = null,
+        val expandedGroups: Set<String> = emptySet(),
     ) {
         val selected = items.filter { it.selected }
         val selectionMode = selected.isNotEmpty()
 
+        /**
+         * Chapters of one series fetched on the same day, one after the other, fold into a single row
+         * that opens on a tap. Only neighbours fold, so the order stays that of [items] - the range
+         * selection relies on it. While selecting, everything is open.
+         */
         fun getUiModel(): List<UpdatesUiModel> {
-            return items
-                .map { UpdatesUiModel.Item(it) }
-                .insertSeparators { before, after ->
-                    val beforeDate = before?.item?.update?.dateFetch?.toLocalDate()
-                    val afterDate = after?.item?.update?.dateFetch?.toLocalDate()
-                    when {
-                        beforeDate != afterDate && afterDate != null -> UpdatesUiModel.Header(afterDate)
-                        // Return null to avoid adding a separator between two items.
-                        else -> null
-                    }
+            val result = mutableListOf<UpdatesUiModel>()
+            var lastDate: LocalDate? = null
+            var index = 0
+            while (index < items.size) {
+                val first = items[index]
+                val date = first.update.dateFetch.toLocalDate()
+                if (date != lastDate) {
+                    result += UpdatesUiModel.Header(date)
+                    lastDate = date
                 }
+                var end = index + 1
+                while (end < items.size &&
+                    items[end].update.mangaId == first.update.mangaId &&
+                    items[end].update.dateFetch.toLocalDate() == date
+                ) {
+                    end++
+                }
+                val run = items.subList(index, end)
+                if (run.size < 2 || selectionMode) {
+                    run.forEach { result += UpdatesUiModel.Item(it) }
+                } else {
+                    val key = "$date-${first.update.mangaId}"
+                    val expanded = key in expandedGroups
+                    result += UpdatesUiModel.Group(key = key, items = run.toList(), expanded = expanded)
+                    if (expanded) run.forEach { result += UpdatesUiModel.Item(it) }
+                }
+                index = end
+            }
+            return result
         }
     }
 

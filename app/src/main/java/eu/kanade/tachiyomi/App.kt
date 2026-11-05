@@ -111,6 +111,9 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         Injekt = InjektScope(MetroInjektRegistrar(application = this, graphProvider = this))
         graph.inject(this)
 
+        // Hidden categories stay hidden again after the app is closed.
+        graph.libraryPreferences.showHiddenCategories.set(false)
+
         TelemetryConfig.init(applicationContext)
 
         GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)

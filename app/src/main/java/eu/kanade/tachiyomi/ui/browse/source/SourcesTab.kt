@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.source
 
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -80,11 +82,28 @@ fun Screen.sourcesTab(): TabContent {
             }
 
             val internalErrString = stringResource(MR.strings.internal_error)
+            val allWorkingString = stringResource(MR.strings.sources_check_all_working)
+            val brokenString = stringResource(MR.strings.sources_check_some_broken)
+            val disableString = stringResource(MR.strings.action_disable_broken_sources)
             LaunchedEffect(Unit) {
                 viewModel.events.collectLatest { event ->
                     when (event) {
                         SourcesViewModel.Event.FailedFetchingSources -> {
                             launch { snackbarHostState.showSnackbar(internalErrString) }
+                        }
+                        is SourcesViewModel.Event.CheckFinished -> launch {
+                            val message = if (event.broken.isEmpty()) {
+                                allWorkingString.format(event.total)
+                            } else {
+                                brokenString.format(event.broken.size, event.total)
+                            }
+                            val result = snackbarHostState.showSnackbar(
+                                message = message,
+                                actionLabel = disableString.takeIf { event.broken.isNotEmpty() },
+                                withDismissAction = true,
+                                duration = SnackbarDuration.Long,
+                            )
+                            if (result == SnackbarResult.ActionPerformed) viewModel.disableSources(event.broken)
                         }
                     }
                 }

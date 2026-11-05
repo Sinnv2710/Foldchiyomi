@@ -2010,7 +2010,29 @@ open class WebGpuViewer(
         moveLeft()
     }
 
+    /**
+     * Guided reading: steps to the next panel of the page instead of turning it, and falls back to
+     * [turn] where the page has no further panel. Returns true when it took over the move.
+     */
+    private fun guided(delta: Int, turn: () -> Unit): Boolean {
+        if (!config.guidedReading || isContinuous || activity.viewModel.state.value.menuVisible) return false
+        scope.launch {
+            if (!pager.state.stepPanel(delta)) turn()
+        }
+        return true
+    }
+
     protected open fun moveRight() {
+        if (guided(if (isReversed) -1 else 1, ::moveRightPlain)) return
+        moveRightPlain()
+    }
+
+    protected open fun moveLeft() {
+        if (guided(if (isReversed) 1 else -1, ::moveLeftPlain)) return
+        moveLeftPlain()
+    }
+
+    private fun moveRightPlain() {
         pager.state.getPage(0)?.let { page ->
             if (config.navigateToPan) {
                 val minX = page.minX(page.scale)
@@ -2031,7 +2053,7 @@ open class WebGpuViewer(
         }
     }
 
-    protected open fun moveLeft() {
+    private fun moveLeftPlain() {
         pager.state.getPage(0)?.let { page ->
             if (config.navigateToPan) {
                 val minX = page.minX(page.scale)

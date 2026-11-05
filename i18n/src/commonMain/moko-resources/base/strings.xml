@@ -54,6 +54,9 @@
     <string name="action_menu">Menu</string>
     <string name="action_filter">Filter</string>
     <string name="action_check_sources">Check sources</string>
+    <string name="sources_check_all_working">All %d sources answered</string>
+    <string name="sources_check_some_broken">%1$d of %2$d sources are not working</string>
+    <string name="action_disable_broken_sources">Turn them off</string>
     <string name="action_check_source">Check connection</string>
     <string name="source_health_checking">Checking…</string>
     <string name="source_health_ok">Reachable</string>
@@ -495,8 +498,22 @@
     <string name="pref_navigate_pan">Pan wide images</string>
     <string name="pref_bubble_zoom">Bubble zoom</string>
     <string name="pref_bubble_zoom_gesture">Bubble zoom gesture</string>
+    <string name="pref_guided_reading">Guided reading</string>
+    <string name="pref_guided_reading_summary">Taps and volume keys go panel by panel and turn the page after the last panel</string>
     <string name="pref_panel_zoom">Zoom to panel</string>
     <string name="pref_panel_zoom_summary">The bubble gesture on artwork zooms to the panel under it. Where no panel is found, it zooms in as usual</string>
+    <string name="updates_group_new_chapters">%1$d chapters, %2$d unread</string>
+    <string name="updates_group_chapters">%1$d chapters</string>
+    <string name="action_merge_duplicates">Merge duplicates</string>
+    <string name="merge_duplicates_summary">Keep one entry. Chapters read or bookmarked in the others are marked in it, their categories are added to it, and the others leave the library. Nothing is deleted</string>
+    <string name="action_hide_category">Hide from the library</string>
+    <string name="action_unhide_category">Show in the library</string>
+    <string name="action_show_hidden_categories">Show hidden categories</string>
+    <string name="action_hide_hidden_categories">Hide hidden categories again</string>
+    <string name="action_add_suggested_repo">Add the Keiyoushi repo</string>
+    <string name="action_auto_scroll">Auto scroll</string>
+    <string name="pref_auto_scroll_speed">Auto scroll speed</string>
+    <string name="auto_scroll_speed_value">%1$d dp/s</string>
     <string name="pref_page_turn_sound">Page turn sound</string>
     <string name="pref_page_turn_sound_summary">A soft paper flip on every page turn. Follows the system sound volume, so silent mode mutes it</string>
     <string name="bubble_zoom_gesture_double_tap">Double tap</string>
@@ -603,6 +620,8 @@
 
     <!-- Tracking section -->
     <string name="tracking_guide">Tracking guide</string>
+    <string name="pref_pull_tracker_progress">Read what the tracker says you read</string>
+    <string name="pref_pull_tracker_progress_summary">When a series is opened, mark chapters read here up to the chapter its tracker reports. Nothing is sent back and nothing is marked unread</string>
     <string name="pref_auto_update_manga_sync">Update progress after reading</string>
     <string name="pref_auto_update_manga_on_mark_read">Update progress when marked as read</string>
     <string name="services">Trackers</string>

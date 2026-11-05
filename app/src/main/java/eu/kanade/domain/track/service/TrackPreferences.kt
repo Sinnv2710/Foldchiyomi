@@ -52,6 +52,9 @@ class TrackPreferences(
 
     val mangabakaScoreType: Preference<String> = preferenceStore.getString("mangabaka_score_type", MangaBaka.STEP_1)
 
+    /** Mark chapters read here when a tracker says they were read elsewhere. Never writes to the tracker. */
+    val pullTrackerProgress: Preference<Boolean> = preferenceStore.getBoolean("pref_pull_tracker_progress", false)
+
     val autoUpdateTrack: Preference<Boolean> = preferenceStore.getBoolean("pref_auto_update_manga_sync_key", true)
 
     val autoUpdateTrackOnMarkRead: Preference<AutoTrackState> = preferenceStore.getEnum(

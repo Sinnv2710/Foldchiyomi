@@ -48,6 +48,7 @@ class ExtensionStoresScreen(
             onOpenDiscord = { it.contact.discord?.let(context::openInBrowser) },
             onClickDelete = { viewModel.showDialog(ExtensionStoreDialog.Delete(it)) },
             onClickRefresh = { viewModel.refreshRepos() },
+            onClickSuggested = viewModel::addFromDeeplink,
             navigateUp = navigator::pop,
         )
 

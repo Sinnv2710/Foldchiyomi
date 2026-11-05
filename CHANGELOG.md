@@ -2,7 +2,17 @@
 
 All notable changes to Foldchiyomi are documented here. For the changes it inherits from Mihon, see [Mihon's changelog](https://github.com/mihonapp/mihon/blob/main/CHANGELOG.md).
 
-## [v1.8.2] - Unreleased
+## [v1.8.6] - 2026-11-05
+
+### Added
+- **Merge duplicates in the library.** Select two or more entries of the same series (say, the same manga from two sources) and press the merge button in the top bar. Pick the one to keep: chapters read or bookmarked in the others are marked in it by chapter number, their categories are added to it, and the others leave the library. It only ever marks read, and nothing is deleted. Idea from Komikku, without its merged-source entries.
+- **Guided reading.** Off by default: **Reader settings → Guided reading**. Taps and volume keys go panel by panel, framing each one in reading order (both pages of a spread, right to left for manga), and turn the page after the last panel. A page with no panels found turns as usual. Not in the scrolling modes. Idea from mihon-ds.
+- **Read what the tracker says you read.** Off by default: **Settings → Tracking → Read what the tracker says you read**. When you open a series, chapters are marked read here up to the chapter its tracker (AniList, MyAnimeList and the like) reports, so reading on another device carries over. One way only: nothing is sent back, and no chapter is marked unread. Idea from Komikku and mihon-ds.
+- **Grouped updates.** In the Updates tab, several chapters of one series fetched on the same day fold into a single row ("5 chapters, 3 unread") that opens on a tap, instead of five rows. Selecting chapters opens everything. Idea from Komikku and J2K.
+- **Hidden categories.** In **Edit categories**, the eye button on a category keeps it, and the manga only in it, out of the library. The eye in the top bar shows them again until the app is closed. Idea from Komikku. They are hidden from the library only: History, Updates and search still list those manga.
+- **Sources that stopped working are easy to turn off.** After **Check sources** in the Sources tab, a message says how many answered and offers **Turn them off** for the ones that did not (unreachable or blocked; a Cloudflare check is not counted as broken). They stay installed and come back from the sources filter.
+- **Add the Keiyoushi repo in one tap** from an empty **Extension repos** screen. It still asks to confirm first. Extension updates are checked every time the app opens, so a repo like Keiyoushi brings the fixes for sources whose sites changed.
+- **Auto scroll** for the webtoon and continuous reading modes, an idea from Komikku and TachiyomiSY. Press play in the reader's bottom bar and the page scrolls by itself at a steady speed, the same at any refresh rate. A touch on the page stops it, and so does the end of the chapter. Set the speed under the reader's settings (**Auto scroll speed**).
 
 ### Fixed
 - **The cover on the cover screen crashed the reader** when the phone took the outer screen back and offered it again, as around the notification shade or an app switch: the new window sometimes came before its display. It is now tried again a moment later instead.

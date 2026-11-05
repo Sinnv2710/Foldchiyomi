@@ -27,6 +27,7 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.library.DeleteLibraryMangaDialog
+import eu.kanade.presentation.library.MergeLibraryMangaDialog
 import eu.kanade.presentation.library.LibrarySettingsDialog
 import eu.kanade.presentation.library.components.LibraryContent
 import eu.kanade.presentation.library.components.LibraryToolbar
@@ -120,6 +121,7 @@ data object LibraryTab : Tab {
                     onClickUnselectAll = viewModel::clearSelection,
                     onClickSelectAll = viewModel::selectAll,
                     onClickInvertSelection = viewModel::invertSelection,
+                    onClickMerge = viewModel::openMergeDialog,
                     onClickFilter = viewModel::showSettingsDialog,
                     onClickRefresh = { onClickRefresh(state.activeCategory) },
                     onClickGlobalUpdate = { onClickRefresh(null) },
@@ -245,6 +247,17 @@ data object LibraryTab : Tab {
                     onDismissRequest = onDismissRequest,
                     onConfirm = { deleteManga, deleteChapter ->
                         viewModel.removeMangas(dialog.manga, deleteManga, deleteChapter)
+                        viewModel.clearSelection()
+                    },
+                )
+            }
+            is LibraryViewModel.Dialog.Merge -> {
+                MergeLibraryMangaDialog(
+                    manga = dialog.manga,
+                    sourceName = { dialog.sourceNames[it.id].orEmpty() },
+                    onDismissRequest = onDismissRequest,
+                    onConfirm = { keep ->
+                        viewModel.mergeInto(keep, dialog.manga.filter { it.id != keep.id })
                         viewModel.clearSelection()
                     },
                 )

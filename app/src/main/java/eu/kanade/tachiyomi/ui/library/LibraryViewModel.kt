@@ -55,6 +55,8 @@ import tachiyomi.domain.category.interactor.SetMangaCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.chapter.interactor.GetBookmarkedChaptersByMangaId
 import tachiyomi.domain.chapter.interactor.GetChaptersByMangaId
+import tachiyomi.domain.chapter.interactor.UpdateChapter
+import tachiyomi.domain.chapter.model.ChapterUpdate
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.history.interactor.GetNextChapters
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -93,6 +95,7 @@ class LibraryViewModel(
     private val downloadManager: DownloadManager,
     private val downloadCache: DownloadCache,
     private val trackerManager: TrackerManager,
+    private val updateChapter: UpdateChapter,
 ) : ViewModel() {
 
     private val searchQuery = MutableStateFlow<String?>(null)
@@ -131,7 +134,13 @@ class LibraryViewModel(
     // first query result, and so returning to the tab doesn't flash empty while it restarts.
     private val library = combine(
         searchQuery.debounce(0.25.seconds),
-        getCategories.subscribe(),
+        combine(
+            getCategories.subscribe(),
+            libraryPreferences.hiddenCategories.changes(),
+            libraryPreferences.showHiddenCategories.changes(),
+        ) { categories, hidden, showHidden ->
+            if (showHidden) categories else categories.filterNot { it.id.toString() in hidden }
+        },
         getFavoritesFlow(),
         combine(getTracksPerManga.subscribe(), getTrackingFiltersFlow(), ::Pair),
         getLibraryItemPreferencesFlow(),
@@ -729,6 +738,57 @@ class LibraryViewModel(
         }
     }
 
+    fun openMergeDialog() {
+        val manga = selectedManga
+        if (manga.size < 2) return
+        viewModelScope.launchIO {
+            val names = manga.associate { it.id to (sourceManager.get(it.source)?.name ?: it.source.toString()) }
+            dialog.update { Dialog.Merge(manga, names) }
+        }
+    }
+
+    /**
+     * Folds [others] into [keep]: a chapter read in any of them, by chapter number, is read in
+     * [keep]; bookmarks and categories are added to it; then [others] leave the library. Only ever
+     * marks read, never unread, and nothing is deleted - the others stay in the database and their
+     * downloads stay on disk, so adding one back is a normal add to library.
+     */
+    fun mergeInto(keep: Manga, others: List<Manga>) {
+        viewModelScope.launchNonCancellable {
+            val keepChapters = getChaptersByMangaId.await(keep.id).filter { it.isRecognizedNumber }
+            val categoryIds = getCategoryIds(keep).toMutableSet()
+            val readNumbers = mutableSetOf<Double>()
+            val bookmarkedNumbers = mutableSetOf<Double>()
+
+            others.forEach { other ->
+                getChaptersByMangaId.await(other.id).filter { it.isRecognizedNumber }.forEach {
+                    if (it.read) readNumbers += it.chapterNumber
+                    if (it.bookmark) bookmarkedNumbers += it.chapterNumber
+                }
+                categoryIds += getCategoryIds(other)
+            }
+
+            val updates = keepChapters.mapNotNull { chapter ->
+                val markRead = !chapter.read && chapter.chapterNumber in readNumbers
+                val markBookmark = !chapter.bookmark && chapter.chapterNumber in bookmarkedNumbers
+                if (!markRead && !markBookmark) {
+                    null
+                } else {
+                    ChapterUpdate(chapter.id) {
+                        if (markRead) read = true
+                        if (markBookmark) bookmark = true
+                    }
+                }
+            }
+            if (updates.isNotEmpty()) updateChapter.awaitAll(updates)
+
+            // 0 is "no category" in the library, not a row of its own.
+            setMangaCategories.await(keep.id, categoryIds.filter { it != 0L })
+
+            updateManga.awaitAll(others.map { MangaUpdate(it.id) { favoriteAt = null } })
+        }
+    }
+
     fun openDeleteMangaDialog() {
         dialog.update { Dialog.DeleteManga(selectedManga) }
     }
@@ -745,6 +805,7 @@ class LibraryViewModel(
         ) : Dialog
 
         data class DeleteManga(val manga: List<Manga>) : Dialog
+        data class Merge(val manga: List<Manga>, val sourceNames: Map<Long, String>) : Dialog
     }
 
     @Immutable

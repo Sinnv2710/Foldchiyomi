@@ -42,4 +42,21 @@ interface Viewer {
      * return true if the event was handled, false otherwise.
      */
     fun handleGenericMotionEvent(event: MotionEvent): Boolean
+
+    /**
+     * Whether this viewer can scroll by itself. Only the continuous (webtoon-style) viewers can.
+     */
+    val supportsAutoScroll: Boolean get() = false
+
+    val isAutoScrolling: Boolean get() = false
+
+    /**
+     * Starts or stops scrolling by itself. Returns whether it is scrolling afterwards.
+     */
+    fun toggleAutoScroll(): Boolean = false
+
+    /**
+     * Stops the auto scroll, if it was running. Called on a touch, on pause and on leaving.
+     */
+    fun stopAutoScroll() {}
 }
