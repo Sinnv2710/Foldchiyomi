@@ -56,6 +56,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class ImageViewerState(var isVertical: Boolean = false, var isReversed: Boolean = false) {
@@ -429,10 +430,11 @@ open class ImageViewerState(var isVertical: Boolean = false, var isReversed: Boo
 
     /**
      * Steps to the panel [delta] places on in reading order (1 next, -1 previous), framing it. A page
-     * at rest starts at its first panel. False past either end, or where no panel can be found, so the
+     * at rest starts at its first panel, or at its last when [enter] is set and [delta] is negative (a
+     * page just turned back onto). False past either end, or where no panel can be found, so the
      * caller turns the page instead.
      */
-    suspend fun stepPanel(delta: Int): Boolean {
+    suspend fun stepPanel(delta: Int, enter: Boolean = false): Boolean {
         if (pageOffset != 0f || bubble != null) return false
         val page = getPage(0) as? ImagePage.ImageSingle ?: return false
         val w = width
@@ -457,9 +459,29 @@ open class ImageViewerState(var isVertical: Boolean = false, var isReversed: Boo
                 abs((p[0] + p[2]) * 0.5f - cx) + abs((p[1] + p[3]) * 0.5f - cy)
             } ?: return false
         }
-        val target = if (current < 0) (if (delta > 0) 0 else return false) else current + delta
+        val target = when {
+            current >= 0 -> current + delta
+            delta > 0 -> 0
+            enter -> panels.lastIndex
+            else -> return false
+        }
         if (target !in panels.indices) return false
         return frameRect(page, panels[target])
+    }
+
+    /**
+     * Once the page turn just asked for has come to rest, frames its first panel (or its last
+     * going back), so a turn lands on a panel and not on the whole page. Gives up quietly where the new
+     * page never settles into an image, such as a chapter transition.
+     */
+    suspend fun enterPanel(delta: Int) {
+        withTimeoutOrNull(PANEL_ENTER_TIMEOUT_MS) {
+            // A turn starts by throwing the offset to +-1 and settles it back to 0.
+            while (pageOffset == 0f) delay(15)
+            while (pageOffset != 0f) delay(30)
+            // The new page may still be decoding, with no panels to find yet.
+            while (!stepPanel(delta, enter = true)) delay(100)
+        }
     }
 
     private suspend fun frameRect(page: ImagePage.ImageSingle, rect: FloatArray): Boolean {
@@ -700,6 +722,7 @@ open class ImageViewerState(var isVertical: Boolean = false, var isReversed: Boo
 
         /** How much of the screen a framed panel takes across or down. */
         const val PANEL_FRAME = 0.94f
+        const val PANEL_ENTER_TIMEOUT_MS = 1500L
     }
 
     private class RenderSnapshot(
