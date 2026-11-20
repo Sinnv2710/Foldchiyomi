@@ -2,6 +2,14 @@
 
 All notable changes to Foldchiyomi are documented here. For the changes it inherits from Mihon, see [Mihon's changelog](https://github.com/mihonapp/mihon/blob/main/CHANGELOG.md).
 
+## Unreleased
+
+### Added
+- **Several chapters download at once from one source.** Downloads used to run one chapter at a time per source, so a whole comic took very long. Settings → Downloads has a new **Concurrent chapters per source** slider (default 3, up to 10).
+
+### Fixed
+- **Download queue that never started.** If the queue still held old items, adding chapters (for example with **All chapters**) did not start the downloader, so nothing showed progress and nothing finished. It now starts whenever it is stopped.
+
 ## [v1.8.9] - 2026-11-05
 
 ### Added

@@ -35,6 +35,7 @@ object SettingsDownloadScreen : SearchableSettings {
 
         val downloadPreferences = remember { context.appGraph.downloadPreferences }
         val parallelSourceLimit by downloadPreferences.parallelSourceLimit.collectAsState()
+        val parallelChapterLimit by downloadPreferences.parallelChapterLimit.collectAsState()
         val parallelPageLimit by downloadPreferences.parallelPageLimit.collectAsState()
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
@@ -55,6 +56,12 @@ object SettingsDownloadScreen : SearchableSettings {
                 valueRange = 1..10,
                 title = stringResource(MR.strings.pref_download_concurrent_sources),
                 onValueChanged = { downloadPreferences.parallelSourceLimit.set(it) },
+            ),
+            Preference.PreferenceItem.SliderPreference(
+                value = parallelChapterLimit,
+                valueRange = 1..10,
+                title = stringResource(MR.strings.pref_download_concurrent_chapters),
+                onValueChanged = { downloadPreferences.parallelChapterLimit.set(it) },
             ),
             Preference.PreferenceItem.SliderPreference(
                 value = parallelPageLimit,
