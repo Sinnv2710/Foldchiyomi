@@ -24,6 +24,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import logcat.LogPriority
 import mihon.core.archive.archiveReader
+import mihon.core.archive.TextEpubRenderer
 import mihon.core.archive.epubReader
 import nl.adaptivity.xmlutil.core.AndroidXmlReader
 import nl.adaptivity.xmlutil.serialization.XML
@@ -92,6 +93,8 @@ class LocalSource(
             0L
         }
 
+        fileSystem.organizeLooseEpubs()
+
         var mangaDirs = fileSystem.getFilesInBaseDirectory()
             // Filter out files that are hidden and is not a folder
             .filter { it.isDirectory && !it.name.orEmpty().startsWith('.') }
@@ -135,10 +138,19 @@ class LocalSource(
                         title = mangaDir.name.orEmpty()
                         url = mangaDir.name.orEmpty()
 
-                        // Try to find the cover
-                        coverManager.find(mangaDir.name.orEmpty())?.let {
-                            thumbnail_url = it.uri.toString()
+                        // Try to find the cover; make one from the first book/chapter when none is saved yet,
+                        // so the browse grid shows covers without opening every series first.
+                        var cover = coverManager.find(mangaDir.name.orEmpty())
+                        if (cover == null) {
+                            val first = mangaDir.listFiles().orEmpty()
+                                .filter { !it.name.orEmpty().startsWith('.') && (it.isDirectory || Archive.isSupported(it) || it.extension.equals("epub", true)) }
+                                .minWithOrNull { f1, f2 -> f1.name.orEmpty().compareToCaseInsensitiveNaturalOrder(f2.name.orEmpty()) }
+                            if (first != null) {
+                                updateCover(SChapter.create().apply { this.url = "${mangaDir.name}/${first.name}" }, this)
+                                cover = coverManager.find(mangaDir.name.orEmpty())
+                            }
                         }
+                        cover?.let { thumbnail_url = it.uri.toString() }
                     }
                 }
             }
@@ -380,9 +392,19 @@ class LocalSource(
                 }
                 is Format.Epub -> {
                     format.file.epubReader(context).use { epub ->
-                        val entry = epub.getImagesFromPages().firstOrNull()
+                        val entry = epub.getCoverImage() ?: epub.getImagesFromPages().firstOrNull()
 
-                        entry?.let { coverManager.update(manga, epub.getInputStream(it)!!) }
+                        if (entry != null) {
+                            coverManager.update(manga, epub.getInputStream(entry)!!)
+                        } else {
+                            // Text book with no cover image: use its first page, drawn as an image.
+                            val first = epub.getTextChapters().take(1)
+                            if (first.isNotEmpty()) {
+                                coverManager.update(manga, TextEpubRenderer(first).render(0))
+                            } else {
+                                null
+                            }
+                        }
                     }
                 }
             }
