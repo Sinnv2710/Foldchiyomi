@@ -37,7 +37,7 @@ android {
     defaultConfig {
         applicationId = "app.foldchiyomi"
 
-        versionCode = 22
+        versionCode = 23
         versionName = "1.9.0"
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
