@@ -35,6 +35,53 @@ class EpubReader(private val reader: ArchiveReader) : Closeable by reader {
     }
 
     /**
+     * Returns the path of the cover image the epub declares (the same one other readers show), or null.
+     * Order: EPUB 3 `cover-image` property, EPUB 2 `<meta name="cover">`, then an image item named "cover".
+     */
+    fun getCoverImage(): String? {
+        val ref = getPackageHref()
+        val doc = getPackageDocument(ref)
+        val items = doc.select("manifest > item")
+        fun isImage(type: String) = type.startsWith("image/")
+        val item = items.firstOrNull { it.attr("properties").split(' ').contains("cover-image") && isImage(it.attr("media-type")) }
+            ?: doc.select("metadata > meta[name=cover]").firstOrNull()?.attr("content")?.let { id ->
+                items.firstOrNull { it.attr("id") == id && isImage(it.attr("media-type")) }
+            }
+            ?: items.firstOrNull {
+                isImage(it.attr("media-type")) && (it.attr("id").equals("cover", true) || it.attr("href").substringAfterLast('/').startsWith("cover", true))
+            }
+        val href = item?.attr("href")?.takeIf { it.isNotEmpty() } ?: return null
+        val path = resolveZipPath(getParentDirectory(ref), href)
+        return path.takeIf { getInputStream(it) != null }
+    }
+
+    /** One block of readable text from a chapter. */
+    data class TextBlock(val text: String, val heading: Boolean)
+
+    /**
+     * Returns the readable text of every spine page (one list of blocks per page, empty pages dropped).
+     * Used when the epub is a text book without page images.
+     */
+    fun getTextChapters(): List<List<TextBlock>> {
+        val ref = getPackageHref()
+        val basePath = getParentDirectory(ref)
+        return getPagesFromDocument(getPackageDocument(ref)).mapNotNull { page ->
+            val entry = resolveZipPath(basePath, page)
+            val doc = getInputStream(entry)?.use { Jsoup.parse(it, null, "") } ?: return@mapNotNull null
+            val blocks = doc.select("h1,h2,h3,h4,h5,h6,p,li,pre")
+                .mapNotNull { el ->
+                    val t = el.text().trim()
+                    if (t.isEmpty()) null else TextBlock(t, el.tagName().startsWith("h"))
+                }
+                .ifEmpty { doc.body()?.text()?.trim()?.takeIf { it.isNotEmpty() }?.let { listOf(TextBlock(it, false)) }.orEmpty() }
+            blocks.takeIf { it.isNotEmpty() }
+        }
+    }
+
+    /** Number of pages in the spine. */
+    fun getSpineSize(): Int = getPagesFromDocument(getPackageDocument(getPackageHref())).size
+
+    /**
      * Returns the path to the package document.
      */
     fun getPackageHref(): String {
@@ -61,7 +108,7 @@ class EpubReader(private val reader: ArchiveReader) : Closeable by reader {
      */
     private fun getPagesFromDocument(document: Document): List<String> {
         val pages = document.select("manifest > item")
-            .filter { node -> "application/xhtml+xml" == node.attr("media-type") }
+            .filter { node -> node.attr("media-type") in PAGE_MEDIA_TYPES }
             .associateBy { it.attr("id") }
 
         val spine = document.select("spine > itemref").map { it.attr("idref") }
@@ -132,5 +179,10 @@ class EpubReader(private val reader: ArchiveReader) : Closeable by reader {
         } else {
             ""
         }
+    }
+
+    private companion object {
+        // Some generators label their pages text/html instead of application/xhtml+xml.
+        val PAGE_MEDIA_TYPES = setOf("application/xhtml+xml", "text/html")
     }
 }

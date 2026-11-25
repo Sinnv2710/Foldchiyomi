@@ -2,13 +2,15 @@
 
 All notable changes to Foldchiyomi are documented here. For the changes it inherits from Mihon, see [Mihon's changelog](https://github.com/mihonapp/mihon/blob/main/CHANGELOG.md).
 
-## Unreleased
+## [v1.9.0] - 2026-11-25
 
 ### Added
-- **Several chapters download at once from one source.** Downloads used to run one chapter at a time per source, so a whole comic took very long. Settings → Downloads has a new **Concurrent chapters per source** slider (default 3, up to 10).
+- **Read text epubs.** An epub that is a book (no page images) now opens in the reader: the text is laid out as pages, one chapter starts on a new page, and you turn pages with the same swipe and taps as a comic. Picture epubs (comics, manga) open as before.
+- **Covers for epubs.** The Local source grid shows the cover the epub declares, the same one other readers show. A book with no cover image gets its first page as the cover.
+- **Drop an epub straight into the local folder.** A loose `.epub` in `Manga/local` is moved into a folder of the same name the next time the Local source opens, so you no longer create a folder per book by hand. The file is copied first and the original is removed only when the copy is complete.
 
 ### Fixed
-- **Download queue that never started.** If the queue still held old items, adding chapters (for example with **All chapters**) did not start the downloader, so nothing showed progress and nothing finished. It now starts whenever it is stopped.
+- **Epubs from the Internet Archive showed no pages.** Their page files are labelled `text/html` instead of `application/xhtml+xml`, so the reader skipped them. Both labels are accepted now.
 
 ## [v1.8.9] - 2026-11-05
 
